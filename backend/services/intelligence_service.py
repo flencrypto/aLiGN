@@ -1,10 +1,12 @@
 """Core intelligence service – website crawling, Grok AI analysis, and asset management."""
 
 import asyncio
+import ipaddress
 import json
 import logging
 import os
 import re
+import socket
 import unicodedata
 import urllib.robotparser
 from datetime import datetime
@@ -30,6 +32,19 @@ GROK_CHAT_URL = "https://api.x.ai/v1/chat/completions"
 GROK_MODEL = "grok-beta"
 GROK_VISION_MODEL = "grok-2-vision-1212"
 
+ALLOWED_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
+
+# Private/internal IP ranges blocked for SSRF protection
+_PRIVATE_NETWORKS = [
+    ipaddress.ip_network("10.0.0.0/8"),
+    ipaddress.ip_network("172.16.0.0/12"),
+    ipaddress.ip_network("192.168.0.0/16"),
+    ipaddress.ip_network("127.0.0.0/8"),
+    ipaddress.ip_network("169.254.0.0/16"),  # Link-local / cloud metadata (AWS, GCP)
+    ipaddress.ip_network("::1/128"),
+    ipaddress.ip_network("fc00::/7"),
+]
+
 _HEADERS = {
     "User-Agent": "ContractGHOST-Intelligence/1.0 (+https://contractghost.com/bot)",
     "Accept": "text/html,application/xhtml+xml",
@@ -37,6 +52,23 @@ _HEADERS = {
 
 
 # ── Robots.txt helpers ────────────────────────────────────────────────────────
+
+def _is_private_url(url: str) -> bool:
+    """Return True if the URL hostname resolves to a private/internal IP address."""
+    try:
+        parsed = urlparse(url)
+        hostname = parsed.hostname
+        if not hostname:
+            return True
+        if hostname.lower() == "localhost":
+            return True
+        # Resolve hostname to IP and check against private ranges
+        ip_str = socket.gethostbyname(hostname)
+        ip = ipaddress.ip_address(ip_str)
+        return any(ip in net for net in _PRIVATE_NETWORKS)
+    except Exception:
+        return True  # Reject on resolution error
+
 
 def _can_fetch(url: str) -> bool:
     """Return True if the URL is allowed by the site's robots.txt."""
@@ -60,6 +92,11 @@ async def crawl_website(url: str) -> dict:
     Respects robots.txt, sets a compliant User-Agent, and rate-limits
     between requests. Returns a dict with page_texts and metadata.
     """
+    if _is_private_url(url):
+        raise ValueError(
+            f"URL '{url}' resolves to a private or internal address and cannot be crawled."
+        )
+
     parsed = urlparse(url)
     base = f"{parsed.scheme}://{parsed.netloc}"
     pages_to_try = [url, urljoin(base, "/about"), urljoin(base, "/investor-relations")]
@@ -449,7 +486,19 @@ def save_photo_local(
     upload_path = Path(UPLOAD_DIR)
     upload_path.mkdir(parents=True, exist_ok=True)
 
-    safe_name = re.sub(r"[^\w.\-]", "_", filename)
+    # Guard against path traversal: strip directory components then sanitize
+    bare_name = os.path.basename(filename)
+    safe_name = re.sub(r"[^\w.\-]", "_", bare_name)
+    if not safe_name or safe_name in {".", ".."}:
+        safe_name = "upload"
+
+    # Enforce allowed image extensions
+    ext = Path(safe_name).suffix.lower()
+    if ext not in ALLOWED_IMAGE_EXTENSIONS:
+        raise ValueError(
+            f"File type '{ext}' is not allowed. Permitted types: "
+            + ", ".join(sorted(ALLOWED_IMAGE_EXTENSIONS))
+        )
     dest = upload_path / safe_name
     # Avoid overwriting existing files
     counter = 1
