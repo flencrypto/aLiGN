@@ -10,6 +10,8 @@ const navItems = [
   { href: '/opportunities', label: 'Opportunities', icon: '🎯' },
   { href: '/bids', label: 'Bids', icon: '📋' },
   { href: '/estimating', label: 'Estimating', icon: '📐' },
+  { href: '/intelligence', label: 'Intelligence', icon: '🧠' },
+  { href: '/blog', label: 'Blog', icon: '✍️' },
 ];
 
 export default function Sidebar() {
