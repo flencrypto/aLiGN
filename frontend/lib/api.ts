@@ -200,3 +200,106 @@ export const estimatingApi = {
   createChecklistItem: (id: number, data: Partial<ChecklistItem>) => request<ChecklistItem>(`/estimating/${id}/checklist`, { method: 'POST', body: JSON.stringify(data) }),
   getScopeGapReport: (id: number) => request<{ score: number; items: ScopeGap[] }>(`/estimating/${id}/scope-gap-report`),
 };
+
+// ── Intelligence Types ──────────────────────────────────────────────────────
+
+export interface ExecutiveProfile {
+  name: string;
+  role: string;
+  communication_style?: string;
+  conversation_angles?: string[];
+}
+
+export interface CompanyIntelligence {
+  id: number;
+  account_id?: number;
+  website: string;
+  company_name?: string;
+  status: string;
+  business_model?: string;
+  locations?: string[];
+  expansion_signals?: string[];
+  technology_growth_indicators?: string[];
+  financial_health_summary?: string;
+  competitor_mentions?: string[];
+  strategic_risk_factors?: string[];
+  potential_bid_opportunities?: string[];
+  executive_profiles?: ExecutiveProfile[];
+  created_at?: string;
+}
+
+export interface Blog {
+  id: number;
+  intelligence_id?: number;
+  title?: string;
+  status: string;
+  seo_meta_description?: string;
+  body_markdown?: string;
+  linkedin_variant?: string;
+  x_variant?: string;
+  created_at?: string;
+}
+
+export interface IntelPhoto {
+  id: number;
+  intelligence_id?: number;
+  account_id?: number;
+  filename: string;
+  photo_type?: string;
+  ai_analysis?: Record<string, unknown>;
+  uploaded_at?: string;
+}
+
+export interface IntelDashboard {
+  expansion_signals?: unknown[];
+  earnings_insights?: unknown[];
+  competitive_activity?: unknown[];
+  executive_activity?: unknown[];
+  ai_investment_indicators?: unknown[];
+}
+
+// ── Intelligence ───────────────────────────────────────────────────────────
+
+// Intel routes live at /api/intel/... (outside the /api/v1 prefix)
+const API_ORIGIN = BASE_URL.replace(/\/api\/v\d+$/, '');
+const INTEL_BASE = `${API_ORIGIN}/api/intel`;
+
+async function intelReq<T>(path: string, options?: RequestInit): Promise<T> {
+  const res = await fetch(`${INTEL_BASE}${path}`, {
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    ...options,
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`API error ${res.status}: ${text}`);
+  }
+  return res.json() as Promise<T>;
+}
+
+export const intelApi = {
+  researchCompany: (data: { website: string; account_id?: number }) =>
+    intelReq<CompanyIntelligence>('/company', { method: 'POST', body: JSON.stringify(data) }),
+  getCompanyIntelligence: (id: number) =>
+    intelReq<CompanyIntelligence>(`/company/${id}`),
+  listCompanyIntelligence: () =>
+    intelReq<CompanyIntelligence[]>('/company'),
+  generateBlog: (intelligenceId: number) =>
+    intelReq<Blog>(`/company/${intelligenceId}/blog`, { method: 'POST' }),
+  listBlogs: () =>
+    intelReq<Blog[]>('/blogs'),
+  getBlog: (id: number) =>
+    intelReq<Blog>(`/blogs/${id}`),
+  approveBlog: (id: number) =>
+    intelReq<Blog>(`/blogs/${id}/approve`, { method: 'PUT' }),
+  uploadPhoto: (file: File, intelligenceId?: number, accountId?: number): Promise<IntelPhoto> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (intelligenceId) formData.append('intelligence_id', String(intelligenceId));
+    if (accountId) formData.append('account_id', String(accountId));
+    return fetch(`${API_ORIGIN}/api/intel/photos/upload`, { method: 'POST', body: formData }).then(r => r.json()) as Promise<IntelPhoto>;
+  },
+  listPhotos: () =>
+    intelReq<IntelPhoto[]>('/photos'),
+  getIntelDashboard: () =>
+    intelReq<IntelDashboard>('/dashboard'),
+};
