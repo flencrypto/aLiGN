@@ -22,7 +22,7 @@ from backend.routers.estimating import router as estimating_router
 from backend.routers.intel import router as intel_router
 from backend.routers.opportunities import router as opportunities_router
 from backend.routers.signals import router as signal_events_router
-from backend.routers.tenders import router as tenders_router
+from backend.routers.tender import router as tender_router
 from backend.routers.uploads import router as uploads_router
 
 # Import all models so SQLAlchemy metadata is populated before create_all
@@ -102,7 +102,7 @@ app.include_router(estimating_router, prefix="/api/v1")
 app.include_router(intel_router, prefix="/api/v1")
 app.include_router(blog_router, prefix="/api/v1")
 app.include_router(uploads_router, prefix="/api/v1")
-app.include_router(tenders_router, prefix="/api/v1")
+app.include_router(tender_router, prefix="/api/v1")
 app.include_router(signal_events_router, prefix="/api/v1")
 app.include_router(calls_router, prefix="/api/v1")
 

@@ -1,55 +1,194 @@
-"""Scoring engine for ContractGHOST.
+"""
+Mathematical scoring engine for Bid Intelligence.
 
 Implements:
   - Competitive Pricing Index (CPI)
-  - Expansion Activity Score
-  - Relationship Timing Score (exponential decay)
-  - Win Probability Model
+  - Win Probability Score
+  - Relationship Timing Score
 """
 
 import math
-from datetime import datetime, timezone
+import statistics
+from typing import Optional
+
+from sqlalchemy.orm import Session
+
+from backend.models.tender import TenderAward
 
 
-# ── Competitive Pricing Index (CPI) ──────────────────────────────────────────
+# ── Competitive Pricing Index ─────────────────────────────────────────────────
 
-def price_per_mw(contract_value: float, capacity_mw: float) -> float | None:
-    """Return price-per-MW (PPMW) for a contract award.
-
-    Returns None if capacity_mw is zero or negative.
+def compute_cpi(
+    db: Session,
+    company: str,
+    region_factor: float = 1.0,
+) -> dict:
     """
-    if capacity_mw <= 0:
-        return None
-    return contract_value / capacity_mw
+    Compute the Competitive Pricing Index (CPI) for a company.
 
+    CPI = (AdjPPMW - MarketMean) / MarketStdDev
+      where AdjPPMW = (contract_value / mw_capacity) / region_factor
 
-def competitive_pricing_index(
-    ppmw: float,
-    market_mean: float,
-    market_std: float,
-) -> float | None:
-    """Return a z-score CPI: (PPMW - mean) / std.
-
-    Negative values → below market (aggressive pricing).
-    Positive values → above market (premium pricing).
-    Returns None if std is zero.
+    Returns dict with cpi, avg_price_per_mw, award_count, total_value, interpretation.
     """
-    if market_std <= 0:
-        return None
-    return (ppmw - market_mean) / market_std
+    # Company awards with MW data
+    company_awards = (
+        db.query(TenderAward)
+        .filter(
+            TenderAward.winning_company.ilike(f"%{company}%"),
+            TenderAward.mw_capacity.isnot(None),
+            TenderAward.mw_capacity > 0,
+            TenderAward.contract_value.isnot(None),
+        )
+        .all()
+    )
+
+    # All awards with MW data for market baseline
+    all_awards = (
+        db.query(TenderAward)
+        .filter(
+            TenderAward.mw_capacity.isnot(None),
+            TenderAward.mw_capacity > 0,
+            TenderAward.contract_value.isnot(None),
+        )
+        .all()
+    )
+
+    total_value = sum(float(a.contract_value) for a in company_awards)
+    award_count = len(company_awards)
+
+    # Compute per-MW prices for company
+    company_ppmw_list = [
+        float(a.contract_value) / float(a.mw_capacity)
+        for a in company_awards
+    ]
+
+    avg_ppmw = statistics.mean(company_ppmw_list) if company_ppmw_list else None
+    adj_ppmw = (avg_ppmw / region_factor) if avg_ppmw is not None else None
+
+    # Market baseline
+    all_ppmw_list = [
+        float(a.contract_value) / float(a.mw_capacity)
+        for a in all_awards
+    ]
+
+    cpi = None
+    interpretation = "Insufficient data"
+
+    if adj_ppmw is not None and len(all_ppmw_list) >= 2:
+        market_mean = statistics.mean(all_ppmw_list)
+        market_std = statistics.stdev(all_ppmw_list)
+        if market_std > 0:
+            cpi = (adj_ppmw - market_mean) / market_std
+            if cpi < -0.5:
+                interpretation = "Aggressive pricing (below market)"
+            elif cpi > 0.5:
+                interpretation = "Premium pricing (above market)"
+            else:
+                interpretation = "Market-rate pricing"
+        else:
+            cpi = 0.0
+            interpretation = "Market-rate pricing (insufficient variance)"
+
+    return {
+        "company": company,
+        "award_count": award_count,
+        "total_value": total_value,
+        "avg_price_per_mw": avg_ppmw,
+        "cpi": cpi,
+        "interpretation": interpretation,
+    }
+
+
+# ── Win Probability Score ─────────────────────────────────────────────────────
+
+def compute_win_probability(
+    historical_win_rate: float,
+    cpi: float | None,
+    expansion_activity_score: float,
+    hiring_velocity: float,
+    risk_score: float,
+) -> float:
+    """
+    WinScore = 0.30*W + 0.20*(1 - |CPI_norm|) + 0.20*E + 0.15*H + 0.15*R
+
+    All inputs normalised to [0, 1]. Returns float in [0, 1].
+    """
+    # Normalise CPI: clamp |CPI| to [0, 3], then invert
+    cpi_norm = _cpi_norm(cpi)
+
+    score = (
+        0.30 * historical_win_rate
+        + 0.20 * cpi_norm
+        + 0.20 * expansion_activity_score
+        + 0.15 * hiring_velocity
+        + 0.15 * risk_score
+    )
+    return round(min(max(score, 0.0), 1.0), 4)
+
+
+def _cpi_norm(cpi: float | None) -> float:
+    """Normalise CPI to [0, 1] contribution (1 = market-rate, 0 = extreme outlier)."""
+    if cpi is None:
+        return 0.5
+    return 1.0 - min(abs(cpi) / 3.0, 1.0)
+
+
+# ── Relationship Timing Score ─────────────────────────────────────────────────
+
+# Decay constants (λ) per signal type – higher = faster decay
+_SIGNAL_DECAY: dict[str, float] = {
+    "contract_win": 0.05,
+    "expansion": 0.04,
+    "charity_event": 0.07,
+    "conference": 0.06,
+    "executive_post": 0.10,
+    "new_role": 0.03,
+    "funding_round": 0.04,
+}
+
+# Importance weights per signal type
+_SIGNAL_IMPORTANCE: dict[str, float] = {
+    "contract_win": 1.0,
+    "expansion": 0.9,
+    "charity_event": 0.5,
+    "conference": 0.6,
+    "executive_post": 0.4,
+    "new_role": 0.8,
+    "funding_round": 0.9,
+}
+
+_CONTACT_THRESHOLD = 0.30
+
+
+def compute_relationship_timing(
+    events: list[str],
+    days_since: list[int],
+) -> dict:
+    """
+    Compute total touchpoint score using exponential decay.
+
+    SignalWeight(t) = e^(-λ * days_since_event)
+    TotalScore = Σ (SignalWeight_i × Importance_i)
+
+    Returns score and whether to recommend contact.
+    """
+    total_score = 0.0
+    for event, days in zip(events, days_since):
+        lam = _SIGNAL_DECAY.get(event, 0.05)
+        importance = _SIGNAL_IMPORTANCE.get(event, 0.5)
+        weight = math.exp(-lam * days) * importance
+        total_score += weight
+
+    # Normalise loosely: cap at 3.0 → scale to [0, 1]
+    normalised = min(total_score / 3.0, 1.0)
+    return {
+        "timing_score": round(normalised, 4),
+        "recommend_contact": normalised >= _CONTACT_THRESHOLD,
+    }
 
 
 # ── Expansion Activity Score ──────────────────────────────────────────────────
-
-# Default weights for expansion signals (sum to 1.0)
-_EXPANSION_WEIGHTS = {
-    "capex_change": 0.30,
-    "new_regions": 0.25,
-    "hiring_growth": 0.20,
-    "facility_expansion": 0.15,
-    "ai_investment": 0.10,
-}
-
 
 def expansion_activity_score(
     capex_change: float = 0.0,
@@ -58,97 +197,16 @@ def expansion_activity_score(
     facility_expansion: float = 0.0,
     ai_investment: float = 0.0,
 ) -> float:
-    """Return a 0–10 weighted expansion activity score.
+    """Weighted expansion activity score (0–10).
 
-    Each input should be in the range 0–10 representing signal intensity.
+    Each input represents a 0–10 intensity measure for that dimension.
+    Weights follow the spec: capex 30%, regions 20%, hiring 20%, facility 20%, AI 10%.
     """
-    w = _EXPANSION_WEIGHTS
-    raw = (
-        w["capex_change"] * capex_change
-        + w["new_regions"] * new_regions
-        + w["hiring_growth"] * hiring_growth
-        + w["facility_expansion"] * facility_expansion
-        + w["ai_investment"] * ai_investment
-    )
-    return min(max(raw, 0.0), 10.0)
-
-
-# ── Relationship Timing Score ─────────────────────────────────────────────────
-
-def signal_decayed_weight(
-    strength: float,
-    decay_factor: float,
-    event_date: datetime,
-    reference_date: datetime | None = None,
-) -> float:
-    """Compute the decayed weight for a single signal.
-
-    Weight = strength × e^(−λ × days_since_event)
-    """
-    if reference_date is None:
-        reference_date = datetime.now(timezone.utc)
-
-    # Normalise both to UTC-aware datetimes
-    if event_date.tzinfo is None:
-        event_date = event_date.replace(tzinfo=timezone.utc)
-    if reference_date.tzinfo is None:
-        reference_date = reference_date.replace(tzinfo=timezone.utc)
-
-    days = max((reference_date - event_date).total_seconds() / 86400, 0)
-    return strength * math.exp(-decay_factor * days)
-
-
-def relationship_timing_score(signals: list[dict]) -> float:
-    """Aggregate decayed signal weights into a relationship timing score.
-
-    Each dict must have keys: strength, decay_factor, event_date (datetime).
-    Returns a non-negative float; higher values indicate better timing.
-    """
-    total = 0.0
-    for s in signals:
-        total += signal_decayed_weight(
-            strength=float(s.get("strength", 1.0)),
-            decay_factor=float(s.get("decay_factor", 0.1)),
-            event_date=s["event_date"],
-        )
-    return round(total, 4)
-
-
-def outreach_recommendation(score: float) -> str:
-    """Return a plain-English recommendation based on the timing score."""
-    if score >= 5.0:
-        return "IMMEDIATE – Multiple strong recent signals. Contact now."
-    if score >= 2.0:
-        return "SOON – Moderate signal activity. Initiate contact within the week."
-    if score >= 0.5:
-        return "MONITOR – Signals present but decaying. Stay watchful."
-    return "LOW – Signal activity is minimal. Continue monitoring."
-
-
-# ── Win Probability Model ─────────────────────────────────────────────────────
-
-def win_probability_score(
-    historical_win_rate: float = 0.0,
-    expansion_score: float = 0.0,
-    hiring_velocity: float = 0.0,
-    price_alignment: float = 0.0,
-    risk_score: float = 0.0,
-) -> float:
-    """Return a 0–100 win probability score.
-
-    Weights from spec:
-      0.30 HistoricalWinRate
-      0.20 ExpansionScore
-      0.15 HiringVelocity
-      0.15 PriceAlignment
-      0.20 RiskScore (inverted – lower risk = higher score)
-    """
-    # Normalise inputs to 0–100 range
     score = (
-        0.30 * min(max(historical_win_rate, 0.0), 100.0)
-        + 0.20 * min(max(expansion_score * 10, 0.0), 100.0)  # expansion_score is 0-10, normalise to 0-100
-        + 0.15 * min(max(hiring_velocity, 0.0), 100.0)
-        + 0.15 * min(max(price_alignment, 0.0), 100.0)
-        + 0.20 * min(max(100.0 - risk_score, 0.0), 100.0)  # lower risk → higher score
+        0.30 * capex_change
+        + 0.20 * new_regions
+        + 0.20 * hiring_growth
+        + 0.20 * facility_expansion
+        + 0.10 * ai_investment
     )
-    return round(min(max(score, 0.0), 100.0), 2)
+    return round(min(max(score, 0.0), 10.0), 4)

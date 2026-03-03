@@ -153,54 +153,6 @@ class UploadedPhotoRead(BaseModel):
     uploaded_at: datetime
 
 
-# ── Tender Award ──────────────────────────────────────────────────────────────
-
-class TenderAwardCreate(BaseModel):
-    authority_name: str = Field(..., max_length=500)
-    winning_company: str = Field(..., max_length=500)
-    contract_value: float | None = None
-    currency: str = Field("GBP", max_length=3)
-    cpv_codes: str | None = None
-    duration_months: int | None = None
-    award_date: datetime | None = None
-    scope_summary: str | None = None
-    source_url: str | None = Field(None, max_length=2048)
-    capacity_mw: float | None = None
-    company_intel_id: int | None = None
-
-
-class TenderAwardRead(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    company_intel_id: int | None = None
-    authority_name: str
-    winning_company: str
-    contract_value: float | None = None
-    currency: str
-    cpv_codes: str | None = None
-    duration_months: int | None = None
-    award_date: datetime | None = None
-    scope_summary: str | None = None
-    source_url: str | None = None
-    capacity_mw: float | None = None
-    price_per_mw: float | None = None
-    created_at: datetime
-
-
-class TenderAwardUpdate(BaseModel):
-    authority_name: str | None = Field(None, max_length=500)
-    winning_company: str | None = Field(None, max_length=500)
-    contract_value: float | None = None
-    currency: str | None = Field(None, max_length=3)
-    cpv_codes: str | None = None
-    duration_months: int | None = None
-    award_date: datetime | None = None
-    scope_summary: str | None = None
-    source_url: str | None = Field(None, max_length=2048)
-    capacity_mw: float | None = None
-
-
 # ── Signal Event ──────────────────────────────────────────────────────────────
 
 class SignalEventCreate(BaseModel):
@@ -248,32 +200,4 @@ class RelationshipTimingResponse(BaseModel):
     top_signals: list[SignalEventRead]
 
 
-# ── Call Intelligence ─────────────────────────────────────────────────────────
 
-class CallCreate(BaseModel):
-    title: str = Field(..., max_length=500)
-    company_intel_id: int | None = None
-    executive_profile_id: int | None = None
-    transcript: str | None = None
-
-
-class CallRead(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    company_intel_id: int | None = None
-    executive_profile_id: int | None = None
-    title: str
-    audio_filename: str | None = None
-    transcript: str | None = None
-    sentiment_score: float | None = None
-    competitor_mentions: str | None = None
-    budget_signals: str | None = None
-    risk_phrases: str | None = None
-    next_steps: str | None = None
-    crm_summary: str | None = None
-    created_at: datetime
-
-
-class CallAnalyzeRequest(BaseModel):
-    transcript: str = Field(..., min_length=20)

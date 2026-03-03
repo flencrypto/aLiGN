@@ -355,38 +355,112 @@ export const uploadsApi = {
   delete: (id: number) => request<void>(`/uploads/photos/${id}`, { method: 'DELETE' }),
 };
 
-// ── Tender Award Types ─────────────────────────────────────────────────────
+// ── Tender Intelligence Types ──────────────────────────────────────────────
 
 export interface TenderAward {
   id: number;
-  company_intel_id?: number;
   authority_name: string;
   winning_company: string;
   contract_value?: number;
-  currency: string;
-  cpv_codes?: string;
-  duration_months?: number;
-  award_date?: string;
+  contract_currency?: string;
   scope_summary?: string;
+  cpv_codes?: string[];
+  award_date?: string;
+  duration_months?: number;
   source_url?: string;
-  capacity_mw?: number;
-  price_per_mw?: number;
-  created_at: string;
+  framework: boolean;
+  region?: string;
+  competitors?: string[];
+  mw_capacity?: number;
+  created_at?: string;
 }
 
-export interface TenderPricingModel {
-  tender_id: number;
-  winning_company: string;
-  contract_value?: number;
-  capacity_mw?: number;
-  price_per_mw: number;
-  market_mean_ppmw: number;
-  market_std_ppmw: number;
-  cpi_z_score: number;
-  pricing_label: 'premium' | 'aggressive' | 'market-rate';
+export interface CPIResult {
+  company: string;
+  award_count: number;
+  total_value: number;
+  avg_price_per_mw?: number;
+  cpi?: number;
+  interpretation: string;
 }
 
-// ── Signal Event Types ─────────────────────────────────────────────────────
+export interface WinScoreResult {
+  company: string;
+  win_probability: number;
+  cpi?: number;
+  breakdown: Record<string, number>;
+}
+
+export interface RelationshipSuggestResult {
+  company_name: string;
+  timing_score: number;
+  recommend_contact: boolean;
+  suggested_angle: string;
+  why_now: string;
+  what_to_mention: string;
+  what_to_avoid: string;
+  risk_flags: string;
+}
+
+// ── Call Intelligence Types ────────────────────────────────────────────────
+
+export interface CallIntelligence {
+  id: number;
+  company_name?: string;
+  executive_name?: string;
+  transcript?: string;
+  sentiment_score?: number;
+  competitor_mentions?: string[];
+  budget_signals?: string[];
+  timeline_mentions?: string[];
+  risk_language?: string[];
+  objection_categories?: string[];
+  next_steps?: string;
+  created_at?: string;
+}
+
+// ── Tender API ─────────────────────────────────────────────────────────────
+
+export const tenderApi = {
+  list: (company?: string) =>
+    request<TenderAward[]>(`/tenders${company ? `?company=${encodeURIComponent(company)}` : ''}`),
+  create: (data: Partial<TenderAward>) =>
+    request<TenderAward>('/tenders', { method: 'POST', body: JSON.stringify(data) }),
+  get: (id: number) => request<TenderAward>(`/tenders/${id}`),
+  delete: (id: number) => request<void>(`/tenders/${id}`, { method: 'DELETE' }),
+  getCPI: (company: string, regionFactor?: number) =>
+    request<CPIResult>(`/tenders/score/cpi?company=${encodeURIComponent(company)}${regionFactor ? `&region_factor=${regionFactor}` : ''}`),
+  getWinScore: (data: {
+    company: string;
+    historical_win_rate: number;
+    expansion_activity_score: number;
+    hiring_velocity: number;
+    risk_score: number;
+    region_factor?: number;
+  }) => request<WinScoreResult>('/tenders/score/win', { method: 'POST', body: JSON.stringify(data) }),
+  suggestRelationship: (data: {
+    company_name: string;
+    recent_events: string[];
+    days_since_events: number[];
+  }) =>
+    request<RelationshipSuggestResult>('/tenders/score/relationship', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+};
+
+// ── Calls API ──────────────────────────────────────────────────────────────
+
+export const callsApi = {
+  analyse: (data: { company_name?: string; executive_name?: string; transcript: string }) =>
+    request<CallIntelligence>('/calls/analyse', { method: 'POST', body: JSON.stringify(data) }),
+  list: (company_name?: string) =>
+    request<CallIntelligence[]>(`/calls${company_name ? `?company_name=${encodeURIComponent(company_name)}` : ''}`),
+  get: (id: number) => request<CallIntelligence>(`/calls/${id}`),
+  delete: (id: number) => request<void>(`/calls/${id}`, { method: 'DELETE' }),
+};
+
+// ── Signal Events Types ────────────────────────────────────────────────────
 
 export interface SignalEvent {
   id: number;
@@ -411,78 +485,21 @@ export interface RelationshipTimingResponse {
   top_signals: SignalEvent[];
 }
 
-// ── Call Intelligence Types ────────────────────────────────────────────────
-
-export interface CallRecord {
-  id: number;
-  company_intel_id?: number;
-  executive_profile_id?: number;
-  title: string;
-  audio_filename?: string;
-  transcript?: string;
-  sentiment_score?: number;
-  competitor_mentions?: string;
-  budget_signals?: string;
-  risk_phrases?: string;
-  next_steps?: string;
-  crm_summary?: string;
-  created_at: string;
-}
-
-// ── Tender Awards API ──────────────────────────────────────────────────────
-
-export const tendersApi = {
-  list: (winning_company?: string) =>
-    request<TenderAward[]>(`/tenders${winning_company ? `?winning_company=${encodeURIComponent(winning_company)}` : ''}`),
-  listForCompany: (company_intel_id: number) =>
-    request<TenderAward[]>(`/tenders/company/${company_intel_id}`),
-  get: (id: number) => request<TenderAward>(`/tenders/${id}`),
-  create: (data: Partial<TenderAward>) =>
-    request<TenderAward>('/tenders', { method: 'POST', body: JSON.stringify(data) }),
-  update: (id: number, data: Partial<TenderAward>) =>
-    request<TenderAward>(`/tenders/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
-  delete: (id: number) => request<void>(`/tenders/${id}`, { method: 'DELETE' }),
-  pricingModel: (id: number, market_mean?: number, market_std?: number) => {
-    const params = new URLSearchParams();
-    if (market_mean) params.set('market_mean_ppmw', String(market_mean));
-    if (market_std) params.set('market_std_ppmw', String(market_std));
-    const qs = params.toString() ? `?${params}` : '';
-    return request<TenderPricingModel>(`/tenders/${id}/pricing-model${qs}`);
-  },
-};
-
-// ── Signal Events API ──────────────────────────────────────────────────────
+// ── Signals API ────────────────────────────────────────────────────────────
 
 export const signalsApi = {
-  list: (opts?: { signal_type?: string; company_name?: string }) => {
-    const params = new URLSearchParams();
-    if (opts?.signal_type) params.set('signal_type', opts.signal_type);
-    if (opts?.company_name) params.set('company_name', opts.company_name);
-    const qs = params.toString() ? `?${params}` : '';
-    return request<SignalEvent[]>(`/signals${qs}`);
-  },
-  listForCompany: (company_intel_id: number) =>
-    request<SignalEvent[]>(`/signals/company/${company_intel_id}`),
-  get: (id: number) => request<SignalEvent>(`/signals/${id}`),
-  create: (data: Partial<SignalEvent> & { event_date: string; signal_type: string }) =>
+  list: (company_intel_id?: number) =>
+    request<SignalEvent[]>(`/signals${company_intel_id ? `?company_intel_id=${company_intel_id}` : ''}`),
+  create: (data: Partial<SignalEvent>) =>
     request<SignalEvent>('/signals', { method: 'POST', body: JSON.stringify(data) }),
+  get: (id: number) => request<SignalEvent>(`/signals/${id}`),
   update: (id: number, data: Partial<SignalEvent>) =>
     request<SignalEvent>(`/signals/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   delete: (id: number) => request<void>(`/signals/${id}`, { method: 'DELETE' }),
-  relationshipSuggest: (company_intel_id: number) =>
-    request<RelationshipTimingResponse>(`/signals/relationship/suggest?company_intel_id=${company_intel_id}`, { method: 'POST' }),
-};
-
-// ── Call Intelligence API ──────────────────────────────────────────────────
-
-export const callsApi = {
-  list: () => request<CallRecord[]>('/calls'),
   listForCompany: (company_intel_id: number) =>
-    request<CallRecord[]>(`/calls/company/${company_intel_id}`),
-  get: (id: number) => request<CallRecord>(`/calls/${id}`),
-  create: (data: { title: string; company_intel_id?: number; executive_profile_id?: number; transcript?: string }) =>
-    request<CallRecord>('/calls', { method: 'POST', body: JSON.stringify(data) }),
-  analyze: (id: number, transcript: string) =>
-    request<CallRecord>(`/calls/${id}/analyze`, { method: 'POST', body: JSON.stringify({ transcript }) }),
-  delete: (id: number) => request<void>(`/calls/${id}`, { method: 'DELETE' }),
+    request<SignalEvent[]>(`/signals/company/${company_intel_id}`),
+  suggestRelationship: (company_intel_id: number) =>
+    request<RelationshipTimingResponse>(`/signals/relationship/suggest?company_intel_id=${company_intel_id}`, {
+      method: 'POST',
+    }),
 };

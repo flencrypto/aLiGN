@@ -11,6 +11,7 @@ Endpoints:
 """
 
 import logging
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -154,8 +155,18 @@ def relationship_suggest(
         for s in signals
     ]
 
-    total_score = scoring.relationship_timing_score(signal_dicts)
-    recommendation = scoring.outreach_recommendation(total_score)
+    # Build events / days_since lists for main's compute_relationship_timing API
+    now = datetime.utcnow()
+    events = [s.signal_type for s in signals]
+    days_since = [max(0, (now - s.event_date).days) for s in signals]
+    timing = scoring.compute_relationship_timing(events, days_since)
+    total_score = timing["timing_score"]
+    recommend = timing["recommend_contact"]
+    recommendation = (
+        "CONTACT RECOMMENDED – timing score is above threshold."
+        if recommend
+        else "WAIT – timing score is below threshold. Monitor for stronger signals."
+    )
 
     # Derive context brief from top recent signal types
     top_signals = signals[:3]
@@ -178,7 +189,7 @@ def relationship_suggest(
     )
 
     risk_flags = []
-    if total_score < 0.5:
+    if total_score < 0.30:
         risk_flags.append("Low signal activity — risk of cold outreach, wait for a stronger trigger.")
     if any(s.signal_type == "risk" for s in signals):
         risk_flags.append("Risk-type signal detected — approach with caution.")
