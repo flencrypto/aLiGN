@@ -3,6 +3,7 @@
 from backend.models.account import Account, Contact, TriggerSignal
 from backend.models.bid import Bid, BidDocument, ComplianceItem, RFI
 from backend.models.estimating import ChecklistItem, EstimatingProject, ScopeGapItem
+from backend.models.intel import BlogPost, CompanyIntel, ExecutiveProfile, NewsItem, UploadedPhoto
 from backend.models.opportunity import Opportunity, QualificationScore
 
 __all__ = [
@@ -18,4 +19,9 @@ __all__ = [
     "EstimatingProject",
     "ScopeGapItem",
     "ChecklistItem",
+    "CompanyIntel",
+    "ExecutiveProfile",
+    "NewsItem",
+    "BlogPost",
+    "UploadedPhoto",
 ]

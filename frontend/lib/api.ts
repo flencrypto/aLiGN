@@ -200,3 +200,157 @@ export const estimatingApi = {
   createChecklistItem: (id: number, data: Partial<ChecklistItem>) => request<ChecklistItem>(`/estimating/${id}/checklist`, { method: 'POST', body: JSON.stringify(data) }),
   getScopeGapReport: (id: number) => request<{ score: number; items: ScopeGap[] }>(`/estimating/${id}/scope-gap-report`),
 };
+
+// ── Intelligence Types ─────────────────────────────────────────────────────
+
+export interface ExecutiveProfile {
+  id: number;
+  company_intel_id: number;
+  name: string;
+  role?: string;
+  professional_focus?: string;
+  public_interests?: string;
+  recent_interviews?: string;
+  conference_appearances?: string;
+  charity_involvement?: string;
+  communication_style?: string;
+  conversation_angles?: string;
+  created_at?: string;
+}
+
+export interface NewsItem {
+  id: number;
+  company_intel_id?: number;
+  title: string;
+  summary?: string;
+  source_url?: string;
+  category: string;
+  company_name?: string;
+  published_at?: string;
+  detected_at?: string;
+}
+
+export interface CompanyIntel {
+  id: number;
+  website: string;
+  company_name?: string;
+  business_model?: string;
+  locations?: string;
+  expansion_signals?: string;
+  technology_indicators?: string;
+  financial_summary?: string;
+  earnings_highlights?: string;
+  competitor_mentions?: string;
+  strategic_risks?: string;
+  bid_opportunities?: string;
+  created_at?: string;
+  executives?: ExecutiveProfile[];
+  news_items?: NewsItem[];
+}
+
+export interface CompanyIntelSummary {
+  id: number;
+  website: string;
+  company_name?: string;
+  created_at?: string;
+}
+
+export interface BlogPost {
+  id: number;
+  company_intel_id?: number;
+  title: string;
+  slug: string;
+  body_markdown: string;
+  meta_description?: string;
+  seo_keywords?: string;
+  linkedin_variant?: string;
+  x_variant?: string;
+  status: string;
+  published_at?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface BlogPostSummary {
+  id: number;
+  title: string;
+  slug: string;
+  status: string;
+  created_at?: string;
+}
+
+export interface UploadedPhoto {
+  id: number;
+  filename: string;
+  original_filename: string;
+  storage_path: string;
+  content_type?: string;
+  size_bytes?: number;
+  alt_text?: string;
+  ai_description?: string;
+  company_intel_id?: number;
+  bid_id?: number;
+  uploaded_at?: string;
+}
+
+// ── Intelligence API ───────────────────────────────────────────────────────
+
+export const intelApi = {
+  researchCompany: (website: string) =>
+    request<CompanyIntel>('/intel/company', { method: 'POST', body: JSON.stringify({ website }) }),
+  listCompanies: () => request<CompanyIntelSummary[]>('/intel/companies'),
+  getCompany: (id: number) => request<CompanyIntel>(`/intel/companies/${id}`),
+  deleteCompany: (id: number) => request<void>(`/intel/companies/${id}`, { method: 'DELETE' }),
+  listNews: (company_intel_id?: number) =>
+    request<NewsItem[]>(`/intel/news${company_intel_id ? `?company_intel_id=${company_intel_id}` : ''}`),
+  createNews: (data: Partial<NewsItem>) =>
+    request<NewsItem>('/intel/news', { method: 'POST', body: JSON.stringify(data) }),
+};
+
+// ── Blog API ───────────────────────────────────────────────────────────────
+
+export const blogApi = {
+  generate: (data: {
+    topic: string;
+    company_intel_id?: number;
+    tone?: string;
+    target_persona?: string;
+    word_count?: number;
+    seo_keywords?: string;
+    cta?: string;
+  }) => request<BlogPost>('/blog/generate', { method: 'POST', body: JSON.stringify(data) }),
+  list: (status?: string) =>
+    request<BlogPostSummary[]>(`/blog${status ? `?status_filter=${status}` : ''}`),
+  get: (id: number) => request<BlogPost>(`/blog/${id}`),
+  update: (id: number, data: Partial<BlogPost>) =>
+    request<BlogPost>(`/blog/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  approve: (id: number) => request<BlogPost>(`/blog/${id}/approve`, { method: 'POST' }),
+  publish: (id: number) => request<BlogPost>(`/blog/${id}/publish`, { method: 'POST' }),
+  delete: (id: number) => request<void>(`/blog/${id}`, { method: 'DELETE' }),
+};
+
+// ── Uploads API ────────────────────────────────────────────────────────────
+
+export const uploadsApi = {
+  uploadPhoto: (file: File, opts?: { alt_text?: string; company_intel_id?: number; bid_id?: number }) => {
+    const form = new FormData();
+    form.append('file', file);
+    if (opts?.alt_text) form.append('alt_text', opts.alt_text);
+    if (opts?.company_intel_id) form.append('company_intel_id', String(opts.company_intel_id));
+    if (opts?.bid_id) form.append('bid_id', String(opts.bid_id));
+    return fetch(`${BASE_URL}/uploads/photos`, { method: 'POST', body: form }).then(async (res) => {
+      if (!res.ok) throw new Error(`Upload failed: ${await res.text()}`);
+      return res.json() as Promise<UploadedPhoto>;
+    });
+  },
+  list: (opts?: { company_intel_id?: number; bid_id?: number }) => {
+    const params = new URLSearchParams();
+    if (opts?.company_intel_id) params.set('company_intel_id', String(opts.company_intel_id));
+    if (opts?.bid_id) params.set('bid_id', String(opts.bid_id));
+    const qs = params.toString() ? `?${params}` : '';
+    return request<UploadedPhoto[]>(`/uploads/photos${qs}`);
+  },
+  get: (id: number) => request<UploadedPhoto>(`/uploads/photos/${id}`),
+  fileUrl: (id: number) => `${BASE_URL}/uploads/photos/${id}/file`,
+  delete: (id: number) => request<void>(`/uploads/photos/${id}`, { method: 'DELETE' }),
+};
