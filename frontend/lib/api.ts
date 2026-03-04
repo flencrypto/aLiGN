@@ -19,11 +19,12 @@ export interface Account {
   id: number;
   name: string;
   type: string;
+  stage?: string;
   location?: string;
   website?: string;
   logo_url?: string;
+  tags?: string;
   notes?: string;
-  stage?: string;
   annual_revenue?: number;
   tier_target?: string;
   created_at?: string;

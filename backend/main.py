@@ -28,6 +28,7 @@ from backend.routers.opportunities import router as opportunities_router
 from backend.routers.tender import router as tender_router
 from backend.routers.uploads import router as uploads_router
 from backend.routers.calls import router as calls_router
+from backend.seed_data import run_seed
 
 # Import all models so SQLAlchemy metadata is populated before create_all
 import backend.models  # noqa: F401
@@ -38,10 +39,11 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Create all database tables on startup."""
+    """Create all database tables and seed initial records on startup."""
     logger.info("aLiGN starting – creating database tables…")
     Base.metadata.create_all(bind=engine)
     logger.info("Database ready.")
+    run_seed()
     yield
     logger.info("aLiGN shutting down.")
 
