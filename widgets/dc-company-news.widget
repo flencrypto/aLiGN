@@ -1,0 +1,76 @@
+{
+  "id": "dc-company-news",
+  "version": "1.0.0",
+  "name": "Data Centre Company News",
+  "description": "Aggregates and surfaces the latest news stories, press releases, and intelligence signals for data centre companies tracked in the system. Categories include expansion, funding, earnings, technology, hiring and competitor activity.",
+  "category": "market-intelligence",
+  "icon": "📰",
+  "template": "Show me the latest {{category}} news for data centre companies{{#if company}} related to {{company}}{{/if}} in the last {{days}} days",
+  "variables": {
+    "category": {
+      "type": "enum",
+      "description": "News category to filter by",
+      "options": ["all", "expansion", "earnings", "technology", "competitor", "hiring", "funding", "general"],
+      "default": "all"
+    },
+    "company": {
+      "type": "string",
+      "description": "Optional company name to scope news to a single organisation",
+      "default": null,
+      "required": false
+    },
+    "days": {
+      "type": "integer",
+      "description": "Lookback window in days",
+      "default": 30,
+      "min": 1,
+      "max": 365
+    },
+    "limit": {
+      "type": "integer",
+      "description": "Maximum number of news items to return",
+      "default": 20,
+      "min": 1,
+      "max": 100
+    }
+  },
+  "data_sources": [
+    {
+      "id": "align-news-feed",
+      "endpoint": "/api/v1/intel/news",
+      "method": "GET",
+      "params": {
+        "company_intel_id": "{{company_intel_id|optional}}"
+      },
+      "description": "News and intelligence feed from the aLiGN intel module"
+    }
+  ],
+  "display": {
+    "type": "news-feed",
+    "columns": [
+      { "key": "category", "label": "Category", "type": "badge" },
+      { "key": "title", "label": "Headline", "primary": true },
+      { "key": "summary", "label": "Summary", "type": "truncated-text", "max_chars": 160 },
+      { "key": "company_name", "label": "Company" },
+      { "key": "source_url", "label": "Source", "type": "link", "link_text": "Read ↗" },
+      { "key": "detected_at", "label": "Detected", "type": "relative-date" }
+    ],
+    "category_colours": {
+      "expansion": "green",
+      "earnings": "blue",
+      "technology": "purple",
+      "competitor": "red",
+      "hiring": "yellow",
+      "funding": "cyan",
+      "general": "slate"
+    },
+    "empty_message": "No news stories found. Research a company in the Intel module to populate the feed.",
+    "refresh_interval_minutes": 30,
+    "max_rows": 50
+  },
+  "assistant_hints": [
+    "Group stories by company and highlight any with multiple signals in the same week",
+    "Flag expansion or funding news for companies already in the aLiGN pipeline",
+    "Offer to generate a blog post or briefing note from a selected news item"
+  ]
+}

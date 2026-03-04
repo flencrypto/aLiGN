@@ -1,0 +1,126 @@
+{
+  "id": "diary-today",
+  "version": "1.0.0",
+  "name": "My Diary Today",
+  "description": "Shows the current user's diary for today: scheduled calls, meetings, site visits, tender deadlines, bid submissions and follow-up reminders due on the current date.",
+  "category": "diary-planning",
+  "icon": "📆",
+  "template": "What's in my diary today?",
+  "variables": {
+    "user": {
+      "type": "string",
+      "description": "The current authenticated user. Resolved automatically from the session.",
+      "default": "{{current_user}}",
+      "system_resolved": true
+    },
+    "date": {
+      "type": "date",
+      "description": "The date to show the diary for (ISO 8601: YYYY-MM-DD). Defaults to today.",
+      "default": "{{current_date}}",
+      "system_resolved": true
+    }
+  },
+  "data_sources": [
+    {
+      "id": "align-calls-today",
+      "endpoint": "/api/v1/calls",
+      "method": "GET",
+      "filter": {
+        "scheduled_date": "{{date}}"
+      },
+      "description": "Calls scheduled for today in the Call Intelligence module"
+    },
+    {
+      "id": "align-bid-deadlines",
+      "endpoint": "/api/v1/bids",
+      "method": "GET",
+      "filter": {
+        "deadline_date": "{{date}}"
+      },
+      "description": "Bid submission deadlines falling on today"
+    },
+    {
+      "id": "align-opportunities-followup",
+      "endpoint": "/api/v1/opportunities",
+      "method": "GET",
+      "filter": {
+        "follow_up_date": "{{date}}"
+      },
+      "description": "Opportunities with a follow-up action due today"
+    },
+    {
+      "id": "align-trigger-signals-today",
+      "endpoint": "/api/v1/trigger-signals",
+      "method": "GET",
+      "filter": {
+        "detected_at_date": "{{date}}"
+      },
+      "description": "Trigger signals detected today (e.g. planning applications, grid connections, hiring spikes)"
+    },
+    {
+      "id": "external-calendar",
+      "endpoint": null,
+      "method": null,
+      "description": "External calendar integration (e.g. Google Calendar, Microsoft 365 / Outlook). Connect via the user settings to pull in external meetings and appointments.",
+      "placeholder": true,
+      "integration_options": ["google-calendar", "microsoft-365", "ical"]
+    }
+  ],
+  "display": {
+    "type": "timeline",
+    "group_by": "time",
+    "sections": [
+      {
+        "id": "calls-meetings",
+        "label": "📞 Calls & Meetings",
+        "data_source": "align-calls-today",
+        "columns": [
+          { "key": "scheduled_time", "label": "Time", "type": "time", "primary": true },
+          { "key": "company_name", "label": "Company" },
+          { "key": "executive_name", "label": "Contact" },
+          { "key": "next_steps", "label": "Agenda / Purpose", "type": "truncated-text" }
+        ]
+      },
+      {
+        "id": "bid-deadlines",
+        "label": "📋 Bid Deadlines",
+        "data_source": "align-bid-deadlines",
+        "columns": [
+          { "key": "title", "label": "Bid", "primary": true },
+          { "key": "status", "label": "Status", "type": "badge" },
+          { "key": "deadline_time", "label": "Deadline Time", "type": "time" }
+        ]
+      },
+      {
+        "id": "opportunity-followups",
+        "label": "🎯 Opportunity Follow-Ups",
+        "data_source": "align-opportunities-followup",
+        "columns": [
+          { "key": "title", "label": "Opportunity", "primary": true },
+          { "key": "stage", "label": "Stage", "type": "badge" },
+          { "key": "estimated_value", "label": "Est. Value", "type": "currency" },
+          { "key": "notes", "label": "Follow-Up Note", "type": "truncated-text" }
+        ]
+      },
+      {
+        "id": "trigger-signals",
+        "label": "⚡ New Trigger Signals",
+        "data_source": "align-trigger-signals-today",
+        "columns": [
+          { "key": "signal_type", "label": "Signal", "type": "badge" },
+          { "key": "description", "label": "Detail", "primary": true },
+          { "key": "source", "label": "Source" }
+        ]
+      }
+    ],
+    "empty_message": "Nothing scheduled in your diary for today. Check the Pipeline or add a call in the Calls module.",
+    "refresh_interval_minutes": 5,
+    "show_date_header": true
+  },
+  "assistant_hints": [
+    "Greet the user and summarise the day in one sentence before listing items",
+    "Flag any bid deadlines falling today with a prominent warning",
+    "If a scheduled call has an existing Call Intelligence record, show the last sentiment score and key next steps",
+    "Offer to prepare a briefing note for each scheduled meeting"
+  ]
+}

@@ -1,0 +1,157 @@
+{
+  "id": "tasks-today",
+  "version": "1.0.0",
+  "name": "My Tasks Today",
+  "description": "Consolidates everything the current user needs to action today: overdue items, tasks due today, upcoming bid submissions, open RFIs, compliance items needing attention, and AI-recommended next steps from the pipeline.",
+  "category": "diary-planning",
+  "icon": "✅",
+  "template": "What do I need to do today?",
+  "variables": {
+    "user": {
+      "type": "string",
+      "description": "The current authenticated user. Resolved automatically from the session.",
+      "default": "{{current_user}}",
+      "system_resolved": true
+    },
+    "date": {
+      "type": "date",
+      "description": "The date to generate tasks for. Defaults to today.",
+      "default": "{{current_date}}",
+      "system_resolved": true
+    },
+    "include_overdue": {
+      "type": "boolean",
+      "description": "Whether to include overdue items from previous days",
+      "default": true
+    },
+    "priority_filter": {
+      "type": "enum",
+      "description": "Filter tasks by priority level",
+      "options": ["all", "high", "medium", "low"],
+      "default": "all"
+    }
+  },
+  "data_sources": [
+    {
+      "id": "align-open-rfis",
+      "endpoint": "/api/v1/bids/{{bid_id}}/rfis",
+      "method": "GET",
+      "filter": {
+        "status": ["open", "pending"],
+        "priority": ["high", "medium"]
+      },
+      "description": "Open RFI questions across all active bids that need answering"
+    },
+    {
+      "id": "align-compliance-items",
+      "endpoint": "/api/v1/bids/{{bid_id}}/compliance",
+      "method": "GET",
+      "filter": {
+        "compliance_status": ["not_compliant", "partial", "needs_evidence"]
+      },
+      "description": "Compliance matrix items that have gaps or missing evidence"
+    },
+    {
+      "id": "align-bid-followups",
+      "endpoint": "/api/v1/bids",
+      "method": "GET",
+      "filter": {
+        "status": ["Draft", "In Progress"],
+        "deadline_within_days": 7
+      },
+      "description": "Active bids with a submission deadline within the next 7 days"
+    },
+    {
+      "id": "align-opportunity-actions",
+      "endpoint": "/api/v1/opportunities",
+      "method": "GET",
+      "filter": {
+        "stage": ["Lead", "Qualified", "Proposal"],
+        "follow_up_date_lte": "{{date}}"
+      },
+      "description": "Opportunities with a follow-up date that is today or overdue"
+    },
+    {
+      "id": "align-scope-gaps",
+      "endpoint": "/api/v1/estimating/{{estimating_id}}/scope-gaps",
+      "method": "GET",
+      "filter": {
+        "status": ["open", "needs_review"]
+      },
+      "description": "Open scope gap items on active estimating projects"
+    },
+    {
+      "id": "align-checklist-items",
+      "endpoint": "/api/v1/estimating/{{estimating_id}}/checklist",
+      "method": "GET",
+      "filter": {
+        "checked": false
+      },
+      "description": "Unchecked estimating checklist items for in-progress projects"
+    }
+  ],
+  "display": {
+    "type": "task-list",
+    "sections": [
+      {
+        "id": "urgent",
+        "label": "🚨 Urgent — Due Today or Overdue",
+        "priority": "high",
+        "colour": "red",
+        "include_sources": ["align-bid-followups", "align-open-rfis"],
+        "sort_by": "deadline_asc"
+      },
+      {
+        "id": "pipeline-actions",
+        "label": "🎯 Pipeline Actions",
+        "priority": "medium",
+        "colour": "yellow",
+        "include_sources": ["align-opportunity-actions"],
+        "columns": [
+          { "key": "title", "label": "Opportunity", "primary": true },
+          { "key": "stage", "label": "Stage", "type": "badge" },
+          { "key": "estimated_value", "label": "Est. Value", "type": "currency" },
+          { "key": "notes", "label": "Action Required", "type": "truncated-text" }
+        ]
+      },
+      {
+        "id": "bid-compliance",
+        "label": "📋 Bid & Compliance Items",
+        "priority": "medium",
+        "colour": "orange",
+        "include_sources": ["align-compliance-items"],
+        "columns": [
+          { "key": "requirement", "label": "Requirement", "primary": true },
+          { "key": "compliance_status", "label": "Status", "type": "badge" },
+          { "key": "owner", "label": "Owner" },
+          { "key": "category", "label": "Category" }
+        ]
+      },
+      {
+        "id": "estimating",
+        "label": "📐 Estimating & Scope",
+        "priority": "low",
+        "colour": "blue",
+        "include_sources": ["align-scope-gaps", "align-checklist-items"],
+        "columns": [
+          { "key": "item", "label": "Item", "primary": true },
+          { "key": "category", "label": "Category", "type": "badge" },
+          { "key": "status", "label": "Status" },
+          { "key": "risk_level", "label": "Risk", "type": "badge" }
+        ]
+      }
+    ],
+    "show_task_count_summary": true,
+    "allow_inline_complete": true,
+    "empty_message": "You're all caught up! No outstanding tasks for today.",
+    "refresh_interval_minutes": 10,
+    "group_completed_tasks": true
+  },
+  "assistant_hints": [
+    "Lead with a summary: 'You have X urgent items, Y pipeline actions and Z compliance gaps today.'",
+    "For RFIs, offer to draft an AI-generated answer from the bid documents already uploaded",
+    "For compliance items with missing evidence, suggest which uploaded documents may provide coverage",
+    "Offer to re-prioritise the task list if the user wants to change focus",
+    "At end of day, summarise what was completed and what rolled over to tomorrow"
+  ]
+}

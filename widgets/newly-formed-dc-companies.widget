@@ -1,0 +1,53 @@
+{
+  "id": "newly-formed-dc-companies",
+  "version": "1.0.0",
+  "name": "Newly Formed Data Centre Companies",
+  "description": "Surfaces companies in the data centre sector that have been newly incorporated or entered the market within a configurable lookback window. Useful for spotting early-stage targets before they appear on competitor radars.",
+  "category": "market-intelligence",
+  "icon": "🏗️",
+  "template": "Show me newly formed companies in the data centre space in the last {{days}} days",
+  "variables": {
+    "days": {
+      "type": "integer",
+      "description": "Lookback window in days",
+      "default": 90,
+      "min": 7,
+      "max": 365
+    }
+  },
+  "data_sources": [
+    {
+      "id": "align-accounts",
+      "endpoint": "/api/v1/accounts",
+      "method": "GET",
+      "filter": {
+        "type": "data-centre",
+        "created_within_days": "{{days}}"
+      },
+      "description": "Accounts tracked inside aLiGN filtered to data-centre type and recently created"
+    },
+    {
+      "id": "align-intel-companies",
+      "endpoint": "/api/v1/intel/companies",
+      "method": "GET",
+      "description": "Company intelligence snapshots ordered by creation date"
+    }
+  ],
+  "display": {
+    "type": "card-list",
+    "columns": [
+      { "key": "company_name", "label": "Company", "primary": true },
+      { "key": "website", "label": "Website", "type": "link" },
+      { "key": "locations", "label": "Locations" },
+      { "key": "created_at", "label": "First Seen", "type": "date" }
+    ],
+    "empty_message": "No newly formed data centre companies found in the last {{days}} days.",
+    "refresh_interval_minutes": 60,
+    "max_rows": 25
+  },
+  "assistant_hints": [
+    "Highlight companies formed in the last 30 days with a 'New' badge",
+    "Flag companies that match target accounts already in the pipeline",
+    "Suggest running deep research via the Intel module for any new entry"
+  ]
+}
