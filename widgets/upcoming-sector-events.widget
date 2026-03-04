@@ -1,0 +1,129 @@
+{
+  "id": "upcoming-sector-events",
+  "version": "1.0.0",
+  "name": "Upcoming Sector Events",
+  "description": "Lists upcoming industry events, conferences, exhibitions and networking opportunities relevant to a given sector. Helps users plan outreach, conference attendance and business development activity.",
+  "category": "diary-planning",
+  "icon": "📅",
+  "template": "What events in the {{sector}} sector are upcoming in the next {{days}} days?",
+  "variables": {
+    "sector": {
+      "type": "enum",
+      "description": "Industry sector to filter events by",
+      "options": [
+        "data-centre",
+        "critical-infrastructure",
+        "construction",
+        "electrical",
+        "mechanical",
+        "energy",
+        "cloud-technology",
+        "finance",
+        "government",
+        "all"
+      ],
+      "default": "data-centre"
+    },
+    "days": {
+      "type": "integer",
+      "description": "Look-ahead window in days from today",
+      "default": 90,
+      "min": 7,
+      "max": 365
+    },
+    "region": {
+      "type": "string",
+      "description": "Geographic region to filter events (e.g. 'UK', 'Europe', 'Global')",
+      "default": "UK",
+      "required": false
+    },
+    "event_type": {
+      "type": "enum",
+      "description": "Type of event to include",
+      "options": ["all", "conference", "exhibition", "networking", "webinar", "awards", "procurement"],
+      "default": "all"
+    }
+  },
+  "data_sources": [
+    {
+      "id": "align-trigger-signals",
+      "endpoint": "/api/v1/trigger-signals",
+      "method": "GET",
+      "filter": {
+        "signal_type": "event"
+      },
+      "description": "Trigger signals of type 'event' logged against accounts in aLiGN"
+    },
+    {
+      "id": "external-events-feed",
+      "endpoint": null,
+      "method": null,
+      "description": "External sector events calendar (to be integrated — e.g. DCD, Datacloud, Gartner, BRE events). Populate via the trigger signals module until a dedicated events feed is connected.",
+      "placeholder": true
+    }
+  ],
+  "display": {
+    "type": "timeline",
+    "columns": [
+      { "key": "event_date", "label": "Date", "type": "date", "primary": true },
+      { "key": "title", "label": "Event Name" },
+      { "key": "event_type", "label": "Type", "type": "badge" },
+      { "key": "location", "label": "Location" },
+      { "key": "organiser", "label": "Organiser" },
+      { "key": "relevance", "label": "Relevance", "type": "badge" },
+      { "key": "registration_url", "label": "Register", "type": "link", "link_text": "Register ↗" }
+    ],
+    "group_by": "month",
+    "empty_message": "No upcoming {{sector}} events found in the next {{days}} days. Add events via trigger signals on relevant accounts.",
+    "refresh_interval_minutes": 720,
+    "highlight_next_event": true
+  },
+  "assistant_hints": [
+    "Flag events that have accounts from the aLiGN pipeline as known attendees",
+    "Suggest adding the event to the user's diary if it has strong pipeline relevance",
+    "Offer to draft an outreach message or conference briefing note for high-priority events",
+    "Remind the user 7 days before an upcoming high-relevance event"
+  ],
+  "known_dc_events": [
+    {
+      "title": "DCD>Global",
+      "organiser": "DatacenterDynamics",
+      "typical_month": "November",
+      "location": "London, UK",
+      "website": "https://www.datacenterdynamics.com/en/dcd-global/",
+      "relevance": "high"
+    },
+    {
+      "title": "Datacloud Europe",
+      "organiser": "BroadGroup",
+      "typical_month": "June",
+      "location": "Monaco (alternates with Amsterdam)",
+      "website": "https://www.datacloudglobal.com/",
+      "relevance": "high"
+    },
+    {
+      "title": "DCD>Webscale",
+      "organiser": "DatacenterDynamics",
+      "typical_month": "March",
+      "location": "London, UK",
+      "website": "https://www.datacenterdynamics.com/",
+      "relevance": "high"
+    },
+    {
+      "title": "Gartner IT Infrastructure & Operations Summit",
+      "organiser": "Gartner",
+      "typical_month": "September",
+      "location": "London, UK",
+      "website": "https://www.gartner.com/en/conferences",
+      "relevance": "medium"
+    },
+    {
+      "title": "UK Construction Week",
+      "organiser": "Media 10",
+      "typical_month": "October",
+      "location": "Birmingham, UK",
+      "website": "https://www.ukconstructionweek.com/",
+      "relevance": "medium"
+    }
+  ]
+}

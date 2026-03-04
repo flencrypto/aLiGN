@@ -1,0 +1,157 @@
+{
+  "id": "top-n-by-category",
+  "version": "1.0.0",
+  "name": "Top N by Category",
+  "description": "Returns a ranked list of the top {{number}} items of a given {{category}} and {{type}} that {{user}} has {{action}} within a specified date range. Supports opportunities, bids, accounts, tenders and calls.",
+  "category": "analytics",
+  "icon": "🏆",
+  "template": "Show me the top {{number}} {{category}} {{type}} that {{user}} has {{action}} between {{start_date}} and {{end_date}}",
+  "variables": {
+    "number": {
+      "type": "integer",
+      "description": "Number of top results to return",
+      "default": 10,
+      "min": 1,
+      "max": 100
+    },
+    "category": {
+      "type": "enum",
+      "description": "The domain category to rank within",
+      "options": ["opportunities", "bids", "accounts", "tenders", "calls", "estimating"],
+      "default": "opportunities"
+    },
+    "type": {
+      "type": "string",
+      "description": "Sub-type or grouping within the category (e.g. 'won bids', 'qualified opportunities', 'DC tier-2 tenders')",
+      "default": "all",
+      "examples": ["won bids", "qualified opportunities", "tier-2 tenders", "high-value accounts"]
+    },
+    "user": {
+      "type": "string",
+      "description": "The user or team member to scope results to. Use 'me' for the current user or a name/email",
+      "default": "me"
+    },
+    "action": {
+      "type": "enum",
+      "description": "The action or status change to filter on",
+      "options": ["created", "updated", "closed", "won", "lost", "qualified", "submitted", "reviewed"],
+      "default": "created"
+    },
+    "start_date": {
+      "type": "date",
+      "description": "Start of the date range (ISO 8601 format: YYYY-MM-DD)",
+      "default": "{{current_date - 90 days}}"
+    },
+    "end_date": {
+      "type": "date",
+      "description": "End of the date range (ISO 8601 format: YYYY-MM-DD)",
+      "default": "{{current_date}}"
+    },
+    "sort_by": {
+      "type": "enum",
+      "description": "Metric to rank results by",
+      "options": ["estimated_value", "probability", "qualification_score", "contract_value", "created_at", "updated_at"],
+      "default": "estimated_value"
+    }
+  },
+  "data_sources": [
+    {
+      "id": "align-opportunities",
+      "endpoint": "/api/v1/opportunities",
+      "method": "GET",
+      "applicable_categories": ["opportunities"],
+      "description": "Opportunity pipeline data with stage, value and qualification score"
+    },
+    {
+      "id": "align-bids",
+      "endpoint": "/api/v1/bids",
+      "method": "GET",
+      "applicable_categories": ["bids"],
+      "description": "Bid records with status, win themes and linked opportunity"
+    },
+    {
+      "id": "align-accounts",
+      "endpoint": "/api/v1/accounts",
+      "method": "GET",
+      "applicable_categories": ["accounts"],
+      "description": "Account / target company records"
+    },
+    {
+      "id": "align-tenders",
+      "endpoint": "/api/v1/tenders",
+      "method": "GET",
+      "applicable_categories": ["tenders"],
+      "description": "Tender award intelligence including contract value and winning company"
+    },
+    {
+      "id": "align-calls",
+      "endpoint": "/api/v1/calls",
+      "method": "GET",
+      "applicable_categories": ["calls"],
+      "description": "Call intelligence records with sentiment, budget signals and next steps"
+    },
+    {
+      "id": "align-estimating",
+      "endpoint": "/api/v1/estimating",
+      "method": "GET",
+      "applicable_categories": ["estimating"],
+      "description": "Estimating projects with scope gap score and budget"
+    }
+  ],
+  "display": {
+    "type": "ranked-table",
+    "show_rank_column": true,
+    "columns_by_category": {
+      "opportunities": [
+        { "key": "title", "label": "Opportunity", "primary": true },
+        { "key": "stage", "label": "Stage", "type": "badge" },
+        { "key": "estimated_value", "label": "Est. Value", "type": "currency" },
+        { "key": "probability", "label": "Probability", "type": "percentage" },
+        { "key": "qualification_score", "label": "Q-Score", "type": "score" },
+        { "key": "updated_at", "label": "Last Updated", "type": "relative-date" }
+      ],
+      "bids": [
+        { "key": "title", "label": "Bid", "primary": true },
+        { "key": "status", "label": "Status", "type": "badge" },
+        { "key": "win_themes", "label": "Win Themes", "type": "truncated-text" },
+        { "key": "updated_at", "label": "Last Updated", "type": "relative-date" }
+      ],
+      "accounts": [
+        { "key": "name", "label": "Company", "primary": true },
+        { "key": "type", "label": "Type", "type": "badge" },
+        { "key": "stage", "label": "Stage" },
+        { "key": "location", "label": "Location" },
+        { "key": "updated_at", "label": "Last Updated", "type": "relative-date" }
+      ],
+      "tenders": [
+        { "key": "authority_name", "label": "Authority", "primary": true },
+        { "key": "winning_company", "label": "Winner" },
+        { "key": "contract_value", "label": "Contract Value", "type": "currency" },
+        { "key": "award_date", "label": "Award Date", "type": "date" },
+        { "key": "region", "label": "Region" }
+      ],
+      "calls": [
+        { "key": "company_name", "label": "Company", "primary": true },
+        { "key": "executive_name", "label": "Executive" },
+        { "key": "sentiment_score", "label": "Sentiment", "type": "score" },
+        { "key": "next_steps", "label": "Next Steps", "type": "truncated-text" },
+        { "key": "created_at", "label": "Date", "type": "date" }
+      ],
+      "estimating": [
+        { "key": "title", "label": "Project", "primary": true },
+        { "key": "project_type", "label": "Type", "type": "badge" },
+        { "key": "budget", "label": "Budget", "type": "currency" },
+        { "key": "scope_gap_score", "label": "Scope Gap Score", "type": "score" },
+        { "key": "updated_at", "label": "Last Updated", "type": "relative-date" }
+      ]
+    },
+    "empty_message": "No {{category}} {{type}} found for {{user}} between {{start_date}} and {{end_date}}.",
+    "refresh_interval_minutes": 15,
+    "max_rows": "{{number}}"
+  },
+  "assistant_hints": [
+    "Offer to drill into any row to see full detail",
+    "Suggest exporting the ranked list as a CSV or PDF report",
+    "If category is 'bids' and action is 'won', highlight the win rate alongside the list"
+  ]
+}
