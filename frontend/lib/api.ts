@@ -21,8 +21,11 @@ export interface Account {
   type: string;
   location?: string;
   website?: string;
+  logo_url?: string;
   notes?: string;
   stage?: string;
+  annual_revenue?: number;
+  tier_target?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -158,6 +161,30 @@ export const accountsApi = {
   createTriggerSignal: (id: number, data: Partial<TriggerSignal>) => request<TriggerSignal>(`/trigger-signals`, { method: 'POST', body: JSON.stringify({ ...data, account_id: id }) }),
 };
 
+// ── Accounts CSV ───────────────────────────────────────────────────────────
+
+export interface CsvImportResult {
+  created: number;
+  skipped: number;
+  errors: string[];
+  message: string;
+}
+
+export const accountsCsvApi = {
+  exportUrl: () => `${BASE_URL}/accounts/export/csv`,
+  templateUrl: () => `${BASE_URL}/accounts/template/csv`,
+  import: (file: File): Promise<CsvImportResult> => {
+    const form = new FormData();
+    form.append('file', file);
+    return fetch(`${BASE_URL}/accounts/import/csv`, { method: 'POST', body: form }).then(
+      async (res) => {
+        if (!res.ok) throw new Error(`CSV import failed: ${await res.text()}`);
+        return res.json() as Promise<CsvImportResult>;
+      }
+    );
+  },
+};
+
 // ── Opportunities ──────────────────────────────────────────────────────────
 
 export const opportunitiesApi = {
@@ -243,6 +270,10 @@ export interface CompanyIntel {
   competitor_mentions?: string;
   strategic_risks?: string;
   bid_opportunities?: string;
+  stock_ticker?: string;
+  stock_price?: string;
+  linkedin_posts?: string;
+  x_posts?: string;
   created_at?: string;
   executives?: ExecutiveProfile[];
   news_items?: NewsItem[];

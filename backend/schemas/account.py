@@ -14,6 +14,8 @@ class AccountBase(BaseModel):
     type: AccountType
     tier_target: str | None = Field(None, max_length=50)
     location: str | None = Field(None, max_length=255)
+    website: str | None = Field(None, max_length=2048)
+    logo_url: str | None = Field(None, max_length=2048)
     annual_revenue: float | None = None
     notes: str | None = None
 
@@ -27,6 +29,8 @@ class AccountUpdate(BaseModel):
     type: AccountType | None = None
     tier_target: str | None = Field(None, max_length=50)
     location: str | None = Field(None, max_length=255)
+    website: str | None = Field(None, max_length=2048)
+    logo_url: str | None = Field(None, max_length=2048)
     annual_revenue: float | None = None
     notes: str | None = None
 

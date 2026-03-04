@@ -17,6 +17,7 @@ from backend.routers.accounts import contacts_router, router as accounts_router
 from backend.routers.accounts import signals_router
 from backend.routers.bids import router as bids_router
 from backend.routers.blog import router as blog_router
+from backend.routers.csv_import_export import router as csv_router
 from backend.routers.debriefs import router as debriefs_router
 from backend.routers.estimating import router as estimating_router
 from backend.routers.exports import router as exports_router
@@ -99,6 +100,7 @@ async def audit_log_middleware(request: Request, call_next) -> Response:
 app.include_router(accounts_router, prefix="/api/v1")
 app.include_router(contacts_router, prefix="/api/v1")
 app.include_router(signals_router, prefix="/api/v1")
+app.include_router(csv_router, prefix="/api/v1")
 app.include_router(opportunities_router, prefix="/api/v1")
 app.include_router(bids_router, prefix="/api/v1")
 app.include_router(exports_router, prefix="/api/v1")

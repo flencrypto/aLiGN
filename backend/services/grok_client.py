@@ -70,8 +70,11 @@ async def research_company(website: str, crawl_text: str) -> dict[str, Any]:
         "Return strictly valid JSON with the following keys: "
         "company_name, business_model, locations, expansion_signals, "
         "technology_indicators, financial_summary, earnings_highlights, "
-        "competitor_mentions, strategic_risks, bid_opportunities. "
-        "Each value should be a short descriptive string or a JSON array of strings. "
+        "competitor_mentions, strategic_risks, bid_opportunities, "
+        "stock_ticker, stock_price. "
+        "stock_ticker: the stock exchange ticker symbol if publicly listed (e.g. 'NASDAQ:MSFT'), or null. "
+        "stock_price: latest known public stock price and date if available (e.g. '$415.23 as of Jan 2025'), or null. "
+        "Each other value should be a short descriptive string or a JSON array of strings. "
         "Do not include any markdown, code fences, or extra text outside the JSON object."
     )
     user_content = (
@@ -81,7 +84,7 @@ async def research_company(website: str, crawl_text: str) -> dict[str, Any]:
 
     raw = ""
     try:
-        raw = await _chat(system_prompt, user_content, max_tokens=1500)
+        raw = await _chat(system_prompt, user_content, max_tokens=1800)
         clean = raw.strip().lstrip("```json").lstrip("```").rstrip("```").strip()
         return json.loads(clean)
     except json.JSONDecodeError:
@@ -90,6 +93,45 @@ async def research_company(website: str, crawl_text: str) -> dict[str, Any]:
     except Exception as exc:
         logger.error("Grok company research failed: %s", exc)
         raise
+
+
+async def research_social_media(company_name: str, crawl_text: str) -> dict[str, Any]:
+    """
+    Use Grok to synthesise recent LinkedIn and X.com (Twitter) posts for a company.
+
+    Returns a dict with keys: linkedin_posts (list of str), x_posts (list of str).
+    Only public, publicly-known post summaries are produced.
+    """
+    system_prompt = (
+        "You are a social media intelligence analyst. "
+        "Based on the provided company content, synthesise what recent public LinkedIn and X.com (Twitter) posts "
+        "from this company are likely to contain, drawing only on publicly known information about the company. "
+        "ONLY use publicly available data — do NOT invent information. "
+        "Return strictly valid JSON with keys: "
+        "linkedin_posts (list of up to 5 strings — recent LinkedIn post summaries or topics), "
+        "x_posts (list of up to 5 strings — recent X.com tweet summaries or topics). "
+        "If insufficient public data is available for either platform, return an empty list for that key. "
+        "Do not include any markdown or extra text outside the JSON object."
+    )
+    user_content = (
+        f"Company: {company_name}\n\n"
+        f"Public content:\n{crawl_text[:4000]}"
+    )
+
+    try:
+        raw = await _chat(system_prompt, user_content, max_tokens=800)
+        clean = raw.strip().lstrip("```json").lstrip("```").rstrip("```").strip()
+        result = json.loads(clean)
+        return {
+            "linkedin_posts": result.get("linkedin_posts", []),
+            "x_posts": result.get("x_posts", []),
+        }
+    except json.JSONDecodeError:
+        logger.warning("Grok returned non-JSON for social media research")
+        return {"linkedin_posts": [], "x_posts": []}
+    except Exception as exc:
+        logger.error("Grok social media research failed: %s", exc)
+        return {"linkedin_posts": [], "x_posts": []}
 
 
 async def research_executives(company_name: str, exec_text: str) -> list[dict[str, Any]]:

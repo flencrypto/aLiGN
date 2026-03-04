@@ -48,6 +48,8 @@ class Account(Base):
     type: Mapped[AccountType] = mapped_column(Enum(AccountType), nullable=False)
     tier_target: Mapped[str | None] = mapped_column(String(50))
     location: Mapped[str | None] = mapped_column(String(255))
+    website: Mapped[str | None] = mapped_column(String(2048))
+    logo_url: Mapped[str | None] = mapped_column(String(2048))
     annual_revenue: Mapped[float | None] = mapped_column()
     notes: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(
