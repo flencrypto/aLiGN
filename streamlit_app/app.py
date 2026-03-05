@@ -23,7 +23,12 @@ import streamlit as st
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 
-API_URL = os.getenv("ALIGN_API_URL", st.secrets.get("ALIGN_API_URL", "http://localhost:8000/api/v1"))
+try:
+    _secret_api_url = st.secrets["ALIGN_API_URL"]
+except Exception:
+    _secret_api_url = None
+
+API_URL = os.getenv("ALIGN_API_URL") or _secret_api_url or "http://localhost:8000/api/v1"
 
 st.set_page_config(
     page_title="aLiGN Analytics",
