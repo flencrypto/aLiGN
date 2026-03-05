@@ -1,3 +1,4 @@
+import Footer from "@/components/layout/Footer";
 import Sidebar from "@/components/layout/Sidebar";
 
 export default function DashboardLayout({
@@ -12,6 +13,7 @@ export default function DashboardLayout({
       <Sidebar />
       <main className="flex-1 flex flex-col overflow-auto relative z-10">
         {children}
+        <Footer />
       </main>
     </div>
   );

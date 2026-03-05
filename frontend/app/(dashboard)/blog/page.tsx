@@ -122,7 +122,7 @@ export default function BlogPage() {
 
   return (
     <>
-      <Header title="Blog" />
+      <Header title="News Feed" />
       <div className="p-6 space-y-6">
         {/* Top bar */}
         <div className="flex items-center justify-between">

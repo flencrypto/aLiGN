@@ -12,7 +12,7 @@ import {
   LayoutDashboard
 } from "lucide-react"
 
-import brandLogo from "figma:asset/a8dcfc9a30b22c416e5510e6487c249b0d798814.png"
+import brandLogo from "../../assets/a8dcfc9a30b22c416e5510e6487c249b0d798814.png"
 
 const NAV_ITEMS = [
   { name: "Command Centre", path: "/", icon: LayoutDashboard },

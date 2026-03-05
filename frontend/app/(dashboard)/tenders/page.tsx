@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Header from '@/components/layout/Header';
 import { tenderApi, TenderAward, CPIResult, RelationshipSuggestResult } from '@/lib/api';
 
 const SIGNAL_EVENTS = [
@@ -165,21 +166,17 @@ export default function TendersPage() {
 
   return (
     <div className="flex flex-col h-full bg-background text-text-main">
-      {/* Header */}
-      <div className="border-b border-border-subtle px-6 py-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold">Tender Award Intelligence</h1>
-          <p className="text-sm text-text-muted mt-0.5">
-            Track public contract awards, model competitor pricing, and optimise outreach timing.
-          </p>
-        </div>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="bg-primary hover:bg-blue-700 text-text-main text-sm font-medium px-4 py-2 rounded"
-        >
-          + Add Award
-        </button>
-      </div>
+      <Header
+        title="Tender Award Intelligence"
+        action={
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="bg-primary hover:bg-primary-dark text-text-main text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+          >
+            + Add Award
+          </button>
+        }
+      />
 
       <div className="flex flex-1 overflow-hidden">
         {/* Left Panel */}

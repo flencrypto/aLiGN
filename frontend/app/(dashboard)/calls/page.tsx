@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Header from '@/components/layout/Header';
 import { callsApi, CallIntelligence, KeyPoint, KeyPointSuggestResult } from '@/lib/api';
 
 export default function CallsPage() {
@@ -142,21 +143,17 @@ export default function CallsPage() {
 
   return (
     <div className="flex flex-col h-full bg-background text-text-main">
-      {/* Header */}
-      <div className="border-b border-border-subtle px-6 py-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold">Call Intelligence</h1>
-          <p className="text-sm text-text-muted mt-0.5">
-            Transcribe and analyse calls to extract budget signals, competitor mentions, key points, and next steps.
-          </p>
-        </div>
-        <button
-          onClick={() => setShowAnalyseModal(true)}
-          className="bg-primary hover:bg-blue-700 text-text-main text-sm font-medium px-4 py-2 rounded"
-        >
-          + Analyse Call
-        </button>
-      </div>
+      <Header
+        title="Call Intelligence"
+        action={
+          <button
+            onClick={() => setShowAnalyseModal(true)}
+            className="bg-primary hover:bg-primary-dark text-text-main text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+          >
+            + Analyse Call
+          </button>
+        }
+      />
 
       <div className="flex flex-1 overflow-hidden">
         {/* Left Panel – call list */}
