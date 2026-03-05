@@ -23,14 +23,8 @@
 # The @netlify/plugin-nextjs plugin enables full Next.js features on Netlify
 # (API routes, Server Components, middleware, ISR, etc.).
 # Netlify installs it automatically — no manual npm install needed.
+# Do NOT add a catch-all [[redirects]] rule here: the plugin manages all
+# routing (server components, API routes, ISR) and a "/*" → "/index.html"
+# rule would intercept those requests before the plugin can handle them.
 [[plugins]]
   package = "@netlify/plugin-nextjs"
-
-# ── Redirect rules ────────────────────────────────────────────────────────────
-# Next.js handles its own routing; these rules ensure clean URLs when the
-# plugin is not handling a request.
-[[redirects]]
-  from   = "/*"
-  to     = "/index.html"
-  status = 200
-  force  = false

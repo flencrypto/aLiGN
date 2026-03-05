@@ -69,7 +69,18 @@ with st.sidebar:
 
 # ── Health check ──────────────────────────────────────────────────────────────
 
-health = fetch("/health" if API_URL.endswith("/api/v1") else "/../health")
+# The health endpoint lives at /health on the backend root, not under /api/v1.
+# Derive the root URL by stripping the /api/v1 suffix if present.
+_backend_root = API_URL.rstrip("/")
+if _backend_root.endswith("/api/v1"):
+    _backend_root = _backend_root[: -len("/api/v1")]
+
+try:
+    health_response = requests.get(f"{_backend_root}/health", timeout=5)
+    health = health_response.json() if health_response.ok else {}
+except Exception:
+    health = {}
+
 if isinstance(health, dict) and health.get("status") == "ok":
     st.sidebar.success("Backend connected ✅")
 else:
