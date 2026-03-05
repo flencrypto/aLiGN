@@ -2,10 +2,13 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Copy backend source into /app/backend/ so the Python package structure
-# matches the import paths used throughout the codebase (from backend.X import …).
-COPY requirements.txt ./backend/
-RUN pip install --no-cache-dir -r ./backend/requirements.txt
+# Build context is backend/ (see docker-compose.yml context: ./backend).
+# Copy source into /app/backend/ so "from backend.X import …" resolves
+# with PYTHONPATH=/app.  Requirements are installed from the /app layer so
+# the cache is invalidated only when requirements.txt changes, not on every
+# source edit.
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . ./backend/
 
