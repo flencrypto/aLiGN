@@ -2,68 +2,100 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Dark theme token layer ── */
+/* =========================================================
+   BRAND TOKENS (RGB channels) + TYPOGRAPHY + RADII
+   ========================================================= */
 
 :root {
+  /* Brand palette (converted from your hex) */
+  --color-background: 10 15 28;        /* #0A0F1C */
+  --color-surface: 22 31 51;           /* #161F33 */
+  --color-border-subtle: 31 42 68;     /* #1F2A44 */
+
+  --color-primary: 0 229 255;          /* #00E5FF */
+  --color-primary-dark: 0 180 216;     /* #00B4D8 */
+  --color-secondary: 99 102 241;       /* #6366F1 */
+
+  --color-text-main: 241 245 249;      /* #F1F5F9 */
+  --color-text-muted: 148 163 184;     /* #94A3B8 */
+  --color-text-faint: 100 116 139;     /* #64748B */
+
+  --color-success: 34 197 94;          /* #22C55E */
+  --color-warning: 245 158 11;         /* #F59E0B */
+  --color-danger: 239 68 68;           /* #EF4444 */
+
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    'Liberation Mono', 'Courier New', monospace;
+
+  --radius-card: 8px;
+  --radius-button: 6px;
+
   color-scheme: dark;
+}
 
-  /* Core palette */
-  --color-background:   #0A0F1C;
-  --color-surface:      #161F33;
-  --color-border-subtle:#1F2A44;
-  --color-primary:      #00E5FF;
-  --color-primary-dark: #00B4D8;
-  --color-secondary:    #6366F1;
+/* =========================================================
+   SEMANTIC TOKENS (Tailwind-friendly)
+   These are what shadcn/ui + your components will use.
+   ========================================================= */
 
-  /* Text */
-  --color-text-main:  #F1F5F9;
-  --color-text-muted: #94A3B8;
-  --color-text-faint: #64748B;
-
-  /* Semantic */
-  --color-success: #22C55E;
-  --color-warning: #F59E0B;
-  --color-danger:  #EF4444;
-
-  /* Legacy aliases kept for backwards compatibility */
+:root {
   --background: var(--color-background);
   --foreground: var(--color-text-main);
-  --surface:    var(--color-surface);
-  --accent:     var(--color-primary);
-  --metallic:   #C8C8C8;
 
-  /* Logo system */
-  --align-bg:     var(--color-background);
-  --align-grid:   rgba(0,229,255,0.04);
+  --card: var(--color-surface);
+  --card-foreground: var(--color-text-main);
+
+  --popover: var(--color-surface);
+  --popover-foreground: var(--color-text-main);
+
+  --primary: var(--color-primary);
+  --primary-foreground: 6 16 22; /* dark text on cyan */
+
+  --secondary: var(--color-secondary);
+  --secondary-foreground: var(--color-text-main);
+
+  --muted: var(--color-surface);
+  --muted-foreground: var(--color-text-muted);
+
+  --accent: var(--color-surface);
+  --accent-foreground: var(--color-text-main);
+
+  --destructive: var(--color-danger);
+  --destructive-foreground: 255 255 255;
+
+  --border: var(--color-border-subtle);
+  --input: var(--color-border-subtle);
+  --ring: var(--color-primary);
+
+  /* Optional sidebar semantics */
+  --sidebar: var(--color-background);
+  --sidebar-foreground: var(--color-text-main);
+  --sidebar-border: var(--color-border-subtle);
+  --sidebar-ring: var(--color-primary);
+}
+
+/* ===========================
+   aLiGN Logo System
+   =========================== */
+
+:root {
+  --align-bg:     #050505;
+  --align-grid:   rgba(0,229,255,0.03);
   --align-beam:   #C8C8C8;
-  --align-text:   var(--color-text-main);
-  --align-accent: var(--color-primary);
+  --align-text:   #F0F0F0;
+  --align-accent: #00E5FF;
 }
 
-body {
-  background-color: var(--color-background);
-  color: var(--color-text-main);
-  font-family: var(--font-inter, "Inter", system-ui, sans-serif);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* ── Light mode overrides ── */
-
-html.light {
-  color-scheme: light;
-  --color-background:    #F0F4F8;
-  --color-surface:       #FFFFFF;
-  --color-border-subtle: #CBD5E1;
-  --color-primary:       #00B8CC;
-  --color-primary-dark:  #0099B0;
-  --color-text-main:     #0A0A0A;
-  --color-text-muted:    #475569;
-  --color-text-faint:    #94A3B8;
-  --align-bg:            #F0F4F8;
-  --align-text:          #0A0A0A;
-  --align-beam:          #444444;
-  --align-grid:          rgba(0,184,204,0.06);
+@layer base {
+  body {
+    background-color: rgb(var(--background));
+    color: rgb(var(--foreground));
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 }
 
 @layer utilities {
@@ -71,56 +103,48 @@ html.light {
     text-wrap: balance;
   }
 
-  /* Blueprint grid background */
   .bg-blueprint {
     background-image:
-      linear-gradient(to right, rgba(30, 58, 95, 0.04) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(30, 58, 95, 0.04) 1px, transparent 1px);
+      linear-gradient(to right, rgb(30 58 95 / 0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(30 58 95 / 0.04) 1px, transparent 1px);
     background-size: 40px 40px;
     background-position: center center;
   }
 
-  /* Glow utilities */
   .glow-primary {
-    box-shadow: 0 0 15px 0 rgba(0, 229, 255, 0.3);
+    box-shadow: 0 0 15px 0 rgb(var(--color-primary) / 0.30);
   }
 
   .glow-primary-hover:hover {
-    box-shadow: 0 0 20px 0 rgba(0, 229, 255, 0.4);
+    box-shadow: 0 0 20px 0 rgb(var(--color-primary) / 0.40);
   }
 
-  /* Frosted glass panel */
   .glass-panel {
-    background-color: rgba(22, 31, 51, 0.8);
+    background-color: rgb(var(--color-surface) / 0.80);
     backdrop-filter: blur(12px);
-    border: 1px solid rgba(0, 229, 255, 0.1);
+    border: 1px solid rgb(var(--color-primary) / 0.10);
   }
 
-  /* Card hover lift */
   .card-hover {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
   }
 
   .card-hover:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 20px -2px rgba(0, 229, 255, 0.15);
+    box-shadow: 0 4px 20px -2px rgb(var(--color-primary) / 0.15);
   }
 
-  /* Pulsing cyan indicator */
   .pulse-cyan {
     animation: pulse-cyan-anim 2s infinite;
   }
 
   @keyframes pulse-cyan-anim {
-    0%   { box-shadow: 0 0 0 0   rgba(0, 229, 255, 0.7); }
-    70%  { box-shadow: 0 0 0 6px rgba(0, 229, 255, 0);   }
-    100% { box-shadow: 0 0 0 0   rgba(0, 229, 255, 0);   }
+    0%   { box-shadow: 0 0 0 0 rgb(var(--color-primary) / 0.70); }
+    70%  { box-shadow: 0 0 0 6px rgb(var(--color-primary) / 0); }
+    100% { box-shadow: 0 0 0 0 rgb(var(--color-primary) / 0); }
   }
 }
 
-/* ===========================
-   aLiGN Logo System
-   =========================== */
 
 /* container */
 
@@ -274,18 +298,15 @@ html.light {
 /* ── Light mode overrides ── */
 
 html.light {
-  --background: #F0F4F8;
-  --foreground: #0A0A0A;
-  --surface:    #FFFFFF;
-  --accent:     #00B8CC;
-  --metallic:   #444444;
+  --color-background: 240 244 248;     /* #F0F4F8 */
+  --color-surface: 255 255 255;        /* #FFFFFF */
+  --color-border-subtle: 226 232 240;  /* #E2E8F0 */
+  --color-primary: 0 184 204;          /* #00B8CC */
+  --color-text-main: 10 10 10;         /* #0A0A0A */
+  --color-text-muted: 68 68 68;        /* #444444 */
   --align-bg:   #F0F4F8;
   --align-text: #0A0A0A;
   --align-beam: #444444;
   --align-grid: rgba(0,184,204,0.06);
-}
-
-html.light body {
-  background-color: var(--background);
-  color: var(--foreground);
+  color-scheme: light;
 }

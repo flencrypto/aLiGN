@@ -12,8 +12,11 @@ import {
   LayoutDashboard
 } from "lucide-react"
 
+<<<<<<< copilot/fix-netlify-streamlit-deployments
+=======
 import brandLogo from "../../assets/a8dcfc9a30b22c416e5510e6487c249b0d798814.png"
 
+>>>>>>> main
 const NAV_ITEMS = [
   { name: "Command Centre", path: "/", icon: LayoutDashboard },
   { name: "Account Intel", path: "/intel", icon: Activity },
@@ -28,8 +31,9 @@ export function Sidebar() {
   return (
     <aside className="w-64 h-screen border-r border-border-subtle bg-surface flex flex-col pt-6 z-10 glass-panel">
       {/* Brand */}
-      <div className="px-6 mb-8 flex items-center">
-         <img src={brandLogo} alt="aLiGN OS" className="w-full object-contain" />
+      <div className="px-6 mb-8 flex items-center gap-2">
+        <span className="text-primary font-bold text-xl tracking-tight">aLiGN</span>
+        <span className="text-text-faint text-xs font-medium uppercase tracking-widest">OS</span>
       </div>
 
       <nav className="flex-1 flex flex-col gap-1 px-3">

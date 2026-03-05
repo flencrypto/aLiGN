@@ -4,50 +4,51 @@
 # Deploys the Next.js 15 frontend from the /frontend subdirectory.
 #
 # Prerequisites (Netlify Site Settings → Environment Variables):
-#   NEXT_PUBLIC_API_URL   URL of your deployed backend, e.g.
-#                         https://api.yourdomain.com/api/v1
+#   NEXT_PUBLIC_API_URL      → URL of your deployed backend
+#                            e.g. https://api.align-dc.com/api/v1
 #
-# Deploy via:
-#   1. Connect this repo to Netlify.
-#   2. Set NEXT_PUBLIC_API_URL in Netlify's environment variables.
-#   3. Netlify will auto-detect this file and build/deploy.
+# Optional (only if using auth):
+#   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+#   NEXT_PUBLIC_AUTH0_DOMAIN
+#   NEXT_PUBLIC_AUTH0_CLIENT_ID
+#
+# Deploy steps:
+# 1. Connect repo to Netlify
+# 2. Add the env vars above
+# 3. Netlify auto-detects this file
 # ─────────────────────────────────────────────────────────────────────────────
 
 [build]
-  # The Next.js app lives in the /frontend subdirectory.
-  base    = "frontend"
-  command = "npm ci && npm run build"
-  publish = ".next"
+  # The Next.js app lives in the /frontend subdirectory
+  base      = "frontend"
+  command   = "npm ci && npm run build"
+  publish   = ".next"
 
 [build.environment]
   NODE_VERSION            = "20"
   NEXT_TELEMETRY_DISABLED = "1"
-  # Override NEXT_PUBLIC_API_URL in Netlify UI → do not hard-code secrets here.
 
 # ── Next.js App Router support ───────────────────────────────────────────────
-# The @netlify/plugin-nextjs plugin handles:
-#   • Server Components & Route Handlers
-#   • Image Optimisation
-#   • Middleware
-#   • Incremental Static Regeneration
+# Full support for Server Components, Route Handlers, Middleware,
+# Image Optimisation and ISR via the official plugin.
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
 # ── Redirect rules ───────────────────────────────────────────────────────────
-# Catch-all fallback so that any direct URL (e.g. /dashboard) returns the
-# Next.js app rather than a 404.  The plugin handles most routing; this is
-# a belt-and-braces fallback.
+# Belt-and-braces catch-all so direct links (/dashboard, /bids/123 etc.)
+# always hit the Next.js handler instead of 404.
 [[redirects]]
   from   = "/*"
   to     = "/.netlify/functions/___netlify-handler"
   status = 200
   force  = false
 
-# ── Headers ──────────────────────────────────────────────────────────────────
+# ── Headers (optional – add any you need) ────────────────────────────────────
 [[headers]]
   for = "/*"
   [headers.values]
-    X-Frame-Options        = "DENY"
-    X-Content-Type-Options = "nosniff"
-    Referrer-Policy        = "strict-origin-when-cross-origin"
-    Permissions-Policy     = "camera=(), microphone=(), geolocation=()"
+    X-Frame-Options           = "DENY"
+    X-XSS-Protection          = "1; mode=block"
+    X-Content-Type-Options    = "nosniff"
+    Referrer-Policy           = "strict-origin-when-cross-origin"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
