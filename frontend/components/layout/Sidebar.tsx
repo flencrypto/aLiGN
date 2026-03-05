@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
+import AlignLogo from '@/components/layout/AlignLogo';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: '⊞' },
@@ -49,9 +50,8 @@ export default function Sidebar() {
         `}
       >
         {/* Logo */}
-        <div className="flex items-center gap-2 px-5 py-5 border-b border-slate-700">
-          <span className="text-2xl">👻</span>
-          <span className="text-white font-bold text-lg tracking-tight">aLiGN</span>
+        <div className="px-5 py-4 border-b border-slate-700">
+          <AlignLogo compact />
         </div>
 
         {/* Nav */}

@@ -89,6 +89,14 @@ async def import_from_hubspot(
     # Map HubSpot company ID → local Account ID for contact association
     hs_id_to_account: dict[str, int] = {}
 
+    # Pre-load existing names and emails for O(1) duplicate checks during import
+    existing_account_names: set[str] = {
+        row[0].lower() for row in db.query(Account.name).all()
+    }
+    existing_contact_emails: set[str] = {
+        row[0] for row in db.query(Contact.email).filter(Contact.email.isnot(None)).all()
+    }
+
     async with httpx.AsyncClient(timeout=30.0) as client:
 
         # ── 1. Pull Companies (paginated) ─────────────────────────────────
@@ -110,11 +118,11 @@ async def import_from_hubspot(
                     skipped_accounts += 1
                     continue
 
-                existing = (
-                    db.query(Account).filter(Account.name.ilike(name)).first()
-                )
-                if existing:
-                    hs_id_to_account[hs_company_id] = existing.id
+                if name.lower() in existing_account_names:
+                    # Try to map the HubSpot ID to the existing local account
+                    existing = db.query(Account).filter(Account.name.ilike(name)).first()
+                    if existing:
+                        hs_id_to_account[hs_company_id] = existing.id
                     skipped_accounts += 1
                     continue
 
