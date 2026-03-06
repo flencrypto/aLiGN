@@ -129,9 +129,6 @@ export default function EstimatingPage() {
                   <p className="text-text-main text-sm font-medium mb-1">{proj.project_type}</p>
                   <div className="flex items-center justify-between">
                     <p className="text-text-muted text-xs">{proj.project_type} · {proj.tier_level ?? '—'}</p>
-                    {false && (
-                      <span className={`text-xs font-bold $""`}>Risk: 0</span>
-                    )}
                   </div>
                 </div>
               ))}
@@ -238,7 +235,7 @@ export default function EstimatingPage() {
                       <span className={`w-3 h-3 rounded-full mt-1 flex-shrink-0 ${trafficLight(gap.identified ? (gap.owner_agreed ? 'Complete' : 'Partial') : 'Red')}`} />
                       <div>
                         <p className="text-text-main text-sm">{gap.description}</p>
-                        <p className="text-text-muted text-xs">{gap.category} · Risk: {""}</p>
+                        <p className="text-text-muted text-xs">{gap.category} · Identified: {gap.identified ? 'Yes' : 'No'} · In price: {gap.included_in_price ? 'Yes' : 'No'}</p>
                         {gap.notes && <p className="text-text-faint text-xs mt-1">{gap.notes}</p>}
                       </div>
                     </div>
