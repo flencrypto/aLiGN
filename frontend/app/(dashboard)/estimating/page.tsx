@@ -4,15 +4,16 @@ import { useEffect, useState } from 'react';
 import Header from '@/components/layout/Header';
 import { estimatingApi, bidsApi, EstimatingProject, ScopeGap, ChecklistItem, Bid } from '@/lib/api';
 
-const SCOPE_CATEGORIES = [
-  'Power Distribution',
-  'Cooling Infrastructure',
-  'Structural Works',
-  'Network Cabling',
-  'Security & Access',
-  'Fire Suppression',
-  'Monitoring & DCIM',
-  'Commissioning',
+// Values must match backend ScopeGapCategory enum exactly
+const SCOPE_CATEGORIES: { value: string; label: string }[] = [
+  { value: 'enabling_works',  label: 'Enabling Works' },
+  { value: 'temp_power',      label: 'Temporary Power' },
+  { value: 'temp_cooling',    label: 'Temporary Cooling' },
+  { value: 'weekend_working', label: 'Weekend Working' },
+  { value: 'commissioning',   label: 'Commissioning' },
+  { value: 'client_kit',      label: 'Client Kit' },
+  { value: 'logistics',       label: 'Logistics' },
+  { value: 'permits',         label: 'Permits' },
 ];
 
 function trafficLight(status: string) {
@@ -88,10 +89,10 @@ export default function EstimatingPage() {
 
   function bidTitle(id?: number) { return id ? bids.find((b) => b.id === id)?.title ?? '—' : '—'; }
 
-  function gapsByCategory(cat: string) { return scopeGaps.filter((g) => g.category === cat); }
+  function gapsByCategory(catValue: string) { return scopeGaps.filter((g) => g.category === catValue); }
 
-  function categoryStatus(cat: string) {
-    const gaps = gapsByCategory(cat);
+  function categoryStatus(catValue: string) {
+    const gaps = gapsByCategory(catValue);
     if (gaps.length === 0) return 'Clear';
     if (gaps.some((g) => !g.identified)) return 'Red';
     if (gaps.some((g) => !g.owner_agreed || !g.included_in_price)) return 'Amber';
@@ -201,12 +202,12 @@ export default function EstimatingPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {SCOPE_CATEGORIES.map((cat) => {
-                    const status = categoryStatus(cat);
-                    const gaps = gapsByCategory(cat);
+                  {SCOPE_CATEGORIES.map(({ value, label }) => {
+                    const status = categoryStatus(value);
+                    const gaps = gapsByCategory(value);
                     return (
-                      <tr key={cat} className="border-b border-border-subtle/50">
-                        <td className="px-4 py-3 text-text-main">{cat}</td>
+                      <tr key={value} className="border-b border-border-subtle/50">
+                        <td className="px-4 py-3 text-text-main">{label}</td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
                             <span className={`w-3 h-3 rounded-full ${trafficLight(status)}`} />
