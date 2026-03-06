@@ -90,10 +90,14 @@ async def run_test_pilot(payload: TestPilotRequest) -> dict[str, Any]:
     try:
         from backend.services.ai_workers import TestPilotWorker
         result = await TestPilotWorker().run(payload.feature_description)
+        # Do not expose internal error messages from the worker to the client.
+        if isinstance(result, dict) and "error" in result:
+            logger.error("test_pilot worker reported error: %s", result.get("error"))
+            raise HTTPException(status_code=500, detail="Test Pilot agent failed")
         return {"status": "ok", "agent": "test_pilot", "result": result}
     except Exception as exc:
         logger.error("test_pilot failed: %s", exc)
-        raise HTTPException(status_code=500, detail=str(exc))
+        raise HTTPException(status_code=500, detail="Test Pilot agent failed")
 
 
 @router.post("/data-curator", summary="Data Curator – design valuation and pricing data pipelines")
