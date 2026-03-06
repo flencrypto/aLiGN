@@ -24,6 +24,7 @@ from backend.routers.estimating import router as estimating_router
 from backend.routers.exports import router as exports_router
 from backend.routers.frameworks import router as frameworks_router
 from backend.routers.intel import router as intel_router
+from backend.routers.intelligence import router as intelligence_router
 from backend.routers.leadtime import router as leadtime_router
 from backend.routers.opportunities import router as opportunities_router
 from backend.routers.swoop import router as swoop_router
@@ -33,6 +34,7 @@ from backend.routers.calls import router as calls_router
 from backend.routers.crm import router as crm_router
 from backend.seed_data import run_seed
 from backend.core.config import settings
+from backend.services.scheduler import setup_scheduler
 
 # Import all models so SQLAlchemy metadata is populated before create_all
 import backend.models  # noqa: F401
@@ -49,6 +51,7 @@ async def lifespan(app: FastAPI):
     run_migrations()
     logger.info("Database ready.")
     run_seed()
+    setup_scheduler(app)
     yield
     logger.info("aLiGN shutting down.")
 
@@ -126,6 +129,7 @@ app.include_router(calls_router, prefix="/api/v1")
 app.include_router(crm_router, prefix="/api/v1")
 app.include_router(leadtime_router, prefix="/api/v1")
 app.include_router(frameworks_router, prefix="/api/v1")
+app.include_router(intelligence_router, prefix="/api/v1")
 
 
 # ── Health Check ──────────────────────────────────────────────────────────────
