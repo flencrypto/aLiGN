@@ -133,12 +133,18 @@ async def _call_worker(
     except Exception as exc:
         logger.error("%s failed: %s", worker_name, exc)
         # Sanitize: store only the exception type to avoid leaking API response
-        # details (e.g., full HTTP error bodies) into the governance log.
+        # details (e.g., full HTTP error bodies) into the governance log or API responses.
         validation_outcome = f"error: {type(exc).__name__}"
         input_tokens = 0
         output_tokens = 0
         confidence = 0.0
-        result = {"confidence": 0.0, "needs_human_review": True, "error": str(exc)}
+        # Do not expose the raw exception message to callers; return a generic error.
+        result = {
+            "confidence": 0.0,
+            "needs_human_review": True,
+            "error": "internal_error",
+            "message": "AI worker failed",
+        }
 
     GovernanceLogger.log(
         worker_name=worker_name,
