@@ -6,6 +6,7 @@ from backend.models.debrief import BidDebrief
 from backend.models.estimating import ChecklistItem, EstimatingProject, ScopeGapItem
 from backend.models.framework import ProcurementFramework
 from backend.models.intel import BlogPost, CompanyIntel, ExecutiveProfile, NewsItem, UploadedPhoto
+from backend.models.projects import CompanyProfile, InfrastructureProject, OpportunitySignal
 from backend.models.intelligence import (
     InfrastructureAnnouncement,
     JobPostingSignal,
@@ -45,4 +46,7 @@ __all__ = [
     "VendorPressRelease",
     "JobPostingSignal",
     "InfrastructureAnnouncement",
+    "InfrastructureProject",
+    "CompanyProfile",
+    "OpportunitySignal",
 ]

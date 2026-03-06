@@ -65,6 +65,8 @@ class NewsArticle(Base):
         default=NewsSourceType.rss,
         server_default="rss",
     )
+    confidence_score: Mapped[float | None] = mapped_column(Float)
+    signal_type: Mapped[str | None] = mapped_column(String(100))
     fetched_at: Mapped[datetime] = mapped_column(
         DateTime, default=func.now(), server_default=func.now()
     )
@@ -163,6 +165,8 @@ class InfrastructureAnnouncement(Base):
     project_value_gbp: Mapped[float | None] = mapped_column(Float)
     keywords_matched: Mapped[str | None] = mapped_column(Text)  # JSON list
     published_at: Mapped[str | None] = mapped_column(String(100))
+    confidence_score: Mapped[float | None] = mapped_column(Float)
+    signal_type: Mapped[str | None] = mapped_column(String(100))
     detected_at: Mapped[datetime] = mapped_column(
         DateTime, default=func.now(), server_default=func.now()
     )
