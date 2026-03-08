@@ -4,6 +4,7 @@ Parses the structured markdown/text, upserts Accounts, creates Opportunities and
 TriggerSignals, and stores the raw briefing as a DailyBriefing record.
 """
 
+import asyncio
 import logging
 import re
 from datetime import datetime, date
@@ -484,21 +485,24 @@ class GrokBriefingParser:
 
     async def upsert_extracted_data(self, extracted: dict, briefing_doc_id: int | None) -> dict:
         """Upsert extracted data into the database."""
-        from backend.database import SessionLocal
-        db = SessionLocal()
-        try:
-            result = parse_and_upsert(db, self._rebuild_text(extracted))
-            db.commit()
-            return {
-                "accounts": result.get("accounts_updated", len(extracted.get("accounts", []))),
-                "opportunities": result.get("opportunities_created", 0),
-                "trigger_signals": result.get("trigger_signals_created", 0),
-            }
-        except Exception:
-            db.rollback()
-            raise
-        finally:
-            db.close()
+        def _sync_upsert() -> dict:
+            from backend.database import SessionLocal
+            db = SessionLocal()
+            try:
+                result = parse_and_upsert(db, self._rebuild_text(extracted))
+                db.commit()
+                return {
+                    "accounts": result.get("accounts_updated", len(extracted.get("accounts", []))),
+                    "opportunities": result.get("opportunities_created", 0),
+                    "trigger_signals": result.get("trigger_signals_created", 0),
+                }
+            except Exception:
+                db.rollback()
+                raise
+            finally:
+                db.close()
+
+        return await asyncio.to_thread(_sync_upsert)
 
     async def enrich_with_tenders(self, extracted: dict, briefing_date: str, briefing_doc_id: int | None) -> None:
         """Placeholder for tender enrichment."""

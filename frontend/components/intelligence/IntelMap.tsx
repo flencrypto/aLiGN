@@ -56,7 +56,7 @@ export default function IntelMap({ projects, stageColors }: Props) {
     const markers: Leaflet.CircleMarker[] = [];
 
     projects
-      .filter((p) => p.latitude && p.longitude)
+      .filter((p) => p.latitude != null && p.longitude != null)
       .forEach((p) => {
         const color = stageColors[p.stage || ''] || '#888';
         const radius = p.capacity_mw
@@ -71,18 +71,56 @@ export default function IntelMap({ projects, stageColors }: Props) {
           radius,
         }).addTo(map);
 
-        const popupContent = [
-          `<strong style="color:#fff">${p.name}</strong>`,
-          p.company ? `<p style="color:#aaa;margin:4px 0 0">${p.company}</p>` : '',
-          p.location ? `<p style="color:#aaa;margin:2px 0 0">📍 ${p.location}</p>` : '',
-          p.capacity_mw ? `<p style="color:#4db6ac;margin:2px 0 0">⚡ ${p.capacity_mw} MW</p>` : '',
-          p.capex_millions ? `<p style="color:#ffb74d;margin:2px 0 0">💰 £${p.capex_millions}M</p>` : '',
-          p.stage ? `<p style="color:${color};margin:4px 0 0;text-transform:capitalize">${p.stage}</p>` : '',
-        ]
-          .filter(Boolean)
-          .join('');
+        const popupContainer = document.createElement('div');
+        popupContainer.style.minWidth = '200px';
 
-        marker.bindPopup(`<div style="min-width:200px">${popupContent}</div>`);
+        const nameEl = document.createElement('strong');
+        nameEl.style.color = '#fff';
+        nameEl.textContent = p.name ?? '';
+        popupContainer.appendChild(nameEl);
+
+        if (p.company) {
+          const companyEl = document.createElement('p');
+          companyEl.style.color = '#aaa';
+          companyEl.style.margin = '4px 0 0';
+          companyEl.textContent = p.company;
+          popupContainer.appendChild(companyEl);
+        }
+
+        if (p.location) {
+          const locationEl = document.createElement('p');
+          locationEl.style.color = '#aaa';
+          locationEl.style.margin = '2px 0 0';
+          locationEl.textContent = `📍 ${p.location}`;
+          popupContainer.appendChild(locationEl);
+        }
+
+        if (p.capacity_mw) {
+          const capacityEl = document.createElement('p');
+          capacityEl.style.color = '#4db6ac';
+          capacityEl.style.margin = '2px 0 0';
+          capacityEl.textContent = `⚡ ${p.capacity_mw} MW`;
+          popupContainer.appendChild(capacityEl);
+        }
+
+        if (p.capex_millions) {
+          const capexEl = document.createElement('p');
+          capexEl.style.color = '#ffb74d';
+          capexEl.style.margin = '2px 0 0';
+          capexEl.textContent = `💰 £${p.capex_millions}M`;
+          popupContainer.appendChild(capexEl);
+        }
+
+        if (p.stage) {
+          const stageEl = document.createElement('p');
+          stageEl.style.color = color;
+          stageEl.style.margin = '4px 0 0';
+          stageEl.style.textTransform = 'capitalize';
+          stageEl.textContent = p.stage;
+          popupContainer.appendChild(stageEl);
+        }
+
+        marker.bindPopup(popupContainer);
         markers.push(marker);
       });
 

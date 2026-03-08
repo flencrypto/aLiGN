@@ -3,8 +3,8 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api/v
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
     ...options,
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
   });
   if (!res.ok) {
     const text = await res.text();
@@ -15,8 +15,8 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 
 async function requestVoid(path: string, options?: RequestInit): Promise<void> {
   const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
     ...options,
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
   });
   if (!res.ok) {
     const text = await res.text();
