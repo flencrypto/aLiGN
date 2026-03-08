@@ -135,9 +135,10 @@ export default function SignalsPage() {
 
   return (
     <div className="flex flex-col min-h-full">
-      <Header title="Signals" subtitle="Commercial and relationship signal events" />
+      <Header title="Signals" />
 
       <div className="flex-1 p-6 space-y-6">
+        <p className="text-sm text-muted-foreground">Commercial and relationship signal events</p>
         {/* Filters + Add */}
         <div className="glass-card p-4 flex flex-wrap gap-3 items-center">
           <input
