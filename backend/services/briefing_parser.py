@@ -335,6 +335,10 @@ def parse_and_upsert(db: Session, briefing_text: str) -> dict[str, Any]:
                     supplier_names=[company] if any(k in company.lower() for k in ["construction", "engineering", "aeco", "mace"]) else None,
                     region=",".join(regions) if regions else None,
                     time_window_days=180
+                _, created = _upsert_opportunity(
+                    db, account, title[:255],
+                    section_text[:500] if section_text else None,
+                    estimated_value,
                 )
                 if created:
                     opportunities_created += 1
