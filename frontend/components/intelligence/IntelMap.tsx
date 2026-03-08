@@ -14,6 +14,15 @@ export default function IntelMap({ projects, stageColors }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<Leaflet.Map | null>(null);
 
+  function escapeHtml(str: string): string {
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   useEffect(() => {
     if (!containerRef.current) return;
 
@@ -72,12 +81,12 @@ export default function IntelMap({ projects, stageColors }: Props) {
         }).addTo(map);
 
         const popupContent = [
-          `<strong style="color:#fff">${p.name}</strong>`,
-          p.company ? `<p style="color:#aaa;margin:4px 0 0">${p.company}</p>` : '',
-          p.location ? `<p style="color:#aaa;margin:2px 0 0">📍 ${p.location}</p>` : '',
+          `<strong style="color:#fff">${escapeHtml(p.name)}</strong>`,
+          p.company ? `<p style="color:#aaa;margin:4px 0 0">${escapeHtml(p.company)}</p>` : '',
+          p.location ? `<p style="color:#aaa;margin:2px 0 0">📍 ${escapeHtml(p.location)}</p>` : '',
           p.capacity_mw ? `<p style="color:#4db6ac;margin:2px 0 0">⚡ ${p.capacity_mw} MW</p>` : '',
           p.capex_millions ? `<p style="color:#ffb74d;margin:2px 0 0">💰 £${p.capex_millions}M</p>` : '',
-          p.stage ? `<p style="color:${color};margin:4px 0 0;text-transform:capitalize">${p.stage}</p>` : '',
+          p.stage ? `<p style="color:${color};margin:4px 0 0;text-transform:capitalize">${escapeHtml(p.stage)}</p>` : '',
         ]
           .filter(Boolean)
           .join('');

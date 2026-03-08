@@ -484,11 +484,13 @@ class GrokBriefingParser:
 
     async def upsert_extracted_data(self, extracted: dict, briefing_doc_id: int | None) -> dict:
         """Upsert extracted data into the database."""
+        import asyncio
         from backend.database import SessionLocal
         db = SessionLocal()
         try:
-            result = parse_and_upsert(db, self._rebuild_text(extracted))
-            db.commit()
+            # parse_and_upsert is synchronous and performs DB I/O; run in a thread
+            # to avoid blocking the event loop.
+            result = await asyncio.to_thread(parse_and_upsert, db, self._rebuild_text(extracted))
             return {
                 "accounts": result.get("accounts_updated", len(extracted.get("accounts", []))),
                 "opportunities": result.get("opportunities_created", 0),
