@@ -13,6 +13,17 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+async function requestVoid(path: string, options?: RequestInit): Promise<void> {
+  const res = await fetch(`${BASE_URL}${path}`, {
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    ...options,
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`API error ${res.status}: ${text}`);
+  }
+}
+
 // ── Types ──────────────────────────────────────────────────────────────────
 
 export interface Account {
@@ -165,7 +176,7 @@ export const accountsApi = {
   create: (data: Partial<Account>) => request<Account>('/accounts', { method: 'POST', body: JSON.stringify(data) }),
   get: (id: number) => request<Account>(`/accounts/${id}`),
   update: (id: number, data: Partial<Account>) => request<Account>(`/accounts/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
-  delete: (id: number) => request<void>(`/accounts/${id}`, { method: 'DELETE' }),
+  delete: (id: number) => requestVoid(`/accounts/${id}`, { method: 'DELETE' }),
   listContacts: (id: number) => request<Contact[]>(`/contacts?account_id=${id}`),
   createContact: (id: number, data: Partial<Contact>) => request<Contact>(`/contacts`, { method: 'POST', body: JSON.stringify({ ...data, account_id: id }) }),
   listTriggerSignals: (id: number) => request<TriggerSignal[]>(`/trigger-signals?account_id=${id}`),
@@ -254,7 +265,7 @@ export const opportunitiesApi = {
   create: (data: Partial<Opportunity>) => request<Opportunity>('/opportunities', { method: 'POST', body: JSON.stringify(data) }),
   get: (id: number) => request<Opportunity>(`/opportunities/${id}`),
   update: (id: number, data: Partial<Opportunity>) => request<Opportunity>(`/opportunities/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
-  delete: (id: number) => request<void>(`/opportunities/${id}`, { method: 'DELETE' }),
+  delete: (id: number) => requestVoid(`/opportunities/${id}`, { method: 'DELETE' }),
   qualify: (id: number, data: QualificationInput) => request<Qualification>(`/opportunities/${id}/qualify`, { method: 'POST', body: JSON.stringify(data) }),
   getQualification: (id: number) => request<Qualification>(`/opportunities/${id}/qualification`),
 };
@@ -266,7 +277,7 @@ export const bidsApi = {
   create: (data: Partial<Bid>) => request<Bid>('/bids', { method: 'POST', body: JSON.stringify(data) }),
   get: (id: number) => request<Bid>(`/bids/${id}`),
   update: (id: number, data: Partial<Bid>) => request<Bid>(`/bids/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
-  delete: (id: number) => request<void>(`/bids/${id}`, { method: 'DELETE' }),
+  delete: (id: number) => requestVoid(`/bids/${id}`, { method: 'DELETE' }),
   listDocuments: (id: number) => request<BidDocument[]>(`/bids/${id}/documents`),
   createDocument: (id: number, data: Partial<BidDocument>) => request<BidDocument>(`/bids/${id}/documents`, { method: 'POST', body: JSON.stringify(data) }),
   listComplianceItems: (id: number) => request<ComplianceItem[]>(`/bids/${id}/compliance`),
@@ -393,7 +404,7 @@ export const intelApi = {
     request<CompanyIntel>('/intel/company', { method: 'POST', body: JSON.stringify({ website }) }),
   listCompanies: () => request<CompanyIntelSummary[]>('/intel/companies'),
   getCompany: (id: number) => request<CompanyIntel>(`/intel/companies/${id}`),
-  deleteCompany: (id: number) => request<void>(`/intel/companies/${id}`, { method: 'DELETE' }),
+  deleteCompany: (id: number) => requestVoid(`/intel/companies/${id}`, { method: 'DELETE' }),
   listNews: (company_intel_id?: number) =>
     request<NewsItem[]>(`/intel/news${company_intel_id ? `?company_intel_id=${company_intel_id}` : ''}`),
   createNews: (data: Partial<NewsItem>) =>
@@ -419,7 +430,7 @@ export const blogApi = {
     request<BlogPost>(`/blog/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   approve: (id: number) => request<BlogPost>(`/blog/${id}/approve`, { method: 'POST' }),
   publish: (id: number) => request<BlogPost>(`/blog/${id}/publish`, { method: 'POST' }),
-  delete: (id: number) => request<void>(`/blog/${id}`, { method: 'DELETE' }),
+  delete: (id: number) => requestVoid(`/blog/${id}`, { method: 'DELETE' }),
 };
 
 // ── Uploads API ────────────────────────────────────────────────────────────
@@ -445,7 +456,7 @@ export const uploadsApi = {
   },
   get: (id: number) => request<UploadedPhoto>(`/uploads/photos/${id}`),
   fileUrl: (id: number) => `${BASE_URL}/uploads/photos/${id}/file`,
-  delete: (id: number) => request<void>(`/uploads/photos/${id}`, { method: 'DELETE' }),
+  delete: (id: number) => requestVoid(`/uploads/photos/${id}`, { method: 'DELETE' }),
 };
 
 // ── Tender Intelligence Types ──────────────────────────────────────────────
@@ -559,7 +570,7 @@ export const tenderApi = {
   create: (data: Partial<TenderAward>) =>
     request<TenderAward>('/tenders', { method: 'POST', body: JSON.stringify(data) }),
   get: (id: number) => request<TenderAward>(`/tenders/${id}`),
-  delete: (id: number) => request<void>(`/tenders/${id}`, { method: 'DELETE' }),
+  delete: (id: number) => requestVoid(`/tenders/${id}`, { method: 'DELETE' }),
   getCPI: (company: string, regionFactor?: number) =>
     request<CPIResult>(`/tenders/score/cpi?company=${encodeURIComponent(company)}${regionFactor ? `&region_factor=${regionFactor}` : ''}`),
   getWinScore: (data: {
@@ -612,7 +623,7 @@ export const callsApi = {
     return request<CallIntelligence[]>(`/calls${query ? `?${query}` : ''}`);
   },
   get: (id: number) => request<CallIntelligence>(`/calls/${id}`),
-  delete: (id: number) => request<void>(`/calls/${id}`, { method: 'DELETE' }),
+  delete: (id: number) => requestVoid(`/calls/${id}`, { method: 'DELETE' }),
   suggestKeyPointLinks: (callId: number, pointIndex: number) =>
     request<KeyPointSuggestResult>(`/calls/${callId}/key-points/${pointIndex}/suggest`),
   linkKeyPoint: (callId: number, pointIndex: number, opportunityId?: number) =>
@@ -658,7 +669,7 @@ export const leadTimeApi = {
     request<LeadTimeItem>('/lead-times', { method: 'POST', body: JSON.stringify(data) }),
   update: (id: number, data: Partial<LeadTimeItem>) =>
     request<LeadTimeItem>(`/lead-times/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
-  delete: (id: number) => request<void>(`/lead-times/${id}`, { method: 'DELETE' }),
+  delete: (id: number) => requestVoid(`/lead-times/${id}`, { method: 'DELETE' }),
   seed: () =>
     request<LeadTimeItem[]>('/lead-times/seed', { method: 'POST' }),
 };
@@ -738,7 +749,7 @@ export const frameworksApi = {
     request<ProcurementFramework>('/frameworks', { method: 'POST', body: JSON.stringify(data) }),
   update: (id: number, data: Partial<ProcurementFramework>) =>
     request<ProcurementFramework>(`/frameworks/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
-  delete: (id: number) => request<void>(`/frameworks/${id}`, { method: 'DELETE' }),
+  delete: (id: number) => requestVoid(`/frameworks/${id}`, { method: 'DELETE' }),
 };
 
 // ── Export helpers (direct download URLs) ────────────────────────────────────
@@ -914,7 +925,7 @@ export const projectsApi = {
   get: (id: number) => request<InfrastructureProject>(`/projects/${id}`),
   create: (data: Partial<InfrastructureProject>) => request<InfrastructureProject>('/projects/', { method: 'POST', body: JSON.stringify(data) }),
   update: (id: number, data: Partial<InfrastructureProject>) => request<InfrastructureProject>(`/projects/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
-  delete: (id: number) => request<void>(`/projects/${id}`, { method: 'DELETE' }),
+  delete: (id: number) => requestVoid(`/projects/${id}`, { method: 'DELETE' }),
   getStats: () => request<ProjectStats>('/projects/stats/summary'),
   getMapData: (stage?: string) => {
     const qs = stage ? `?stage=${stage}` : '';
@@ -1068,7 +1079,7 @@ export const signalsApi = {
   update: (id: number, data: Partial<SignalEvent>) =>
     request<SignalEvent>(`/signals/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   delete: (id: number) =>
-    request<void>(`/signals/${id}`, { method: 'DELETE' }),
+    requestVoid(`/signals/${id}`, { method: 'DELETE' }),
   computeExpansionScore: (data: ExpansionScoreRequest) =>
     request<ExpansionScoreResult>('/signals/score/expansion', { method: 'POST', body: JSON.stringify(data) }),
 };
