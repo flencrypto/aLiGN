@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import 'leaflet/dist/leaflet.css';
+import type * as Leaflet from 'leaflet';
 import type { InfrastructureProject } from '@/lib/api';
 
 interface Props {
@@ -11,7 +12,7 @@ interface Props {
 
 export default function IntelMap({ projects, stageColors }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<L.Map | null>(null);
+  const mapRef = useRef<Leaflet.Map | null>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -20,7 +21,7 @@ export default function IntelMap({ projects, stageColors }: Props) {
     const L = require('leaflet') as typeof import('leaflet');
 
     // Fix Leaflet icon paths in Next.js
-    delete (L.Icon.Default.prototype as Record<string, unknown>)._getIconUrl;
+    delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl;
     L.Icon.Default.mergeOptions({
       iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
       iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
@@ -52,7 +53,7 @@ export default function IntelMap({ projects, stageColors }: Props) {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const L = require('leaflet') as typeof import('leaflet');
 
-    const markers: L.CircleMarker[] = [];
+    const markers: Leaflet.CircleMarker[] = [];
 
     projects
       .filter((p) => p.latitude && p.longitude)

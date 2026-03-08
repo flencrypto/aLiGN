@@ -489,7 +489,11 @@ class GrokBriefingParser:
         try:
             result = parse_and_upsert(db, self._rebuild_text(extracted))
             db.commit()
-            return result.get("counts", {"accounts": len(extracted.get("accounts", []))})
+            return {
+                "accounts": result.get("accounts_updated", len(extracted.get("accounts", []))),
+                "opportunities": result.get("opportunities_created", 0),
+                "trigger_signals": result.get("trigger_signals_created", 0),
+            }
         except Exception:
             db.rollback()
             raise

@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState, use } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import Header from '@/components/layout/Header';
 import {
@@ -40,9 +40,11 @@ import {
 
 type Tab = 'overview' | 'contacts' | 'signals' | 'opportunities' | 'bids';
 
-export default function AccountDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id: rawId } = use(params);
-  const accountId = Number(rawId);
+const DEFAULT_SIGNAL_FORM = { signal_type: 'planning', title: '', description: '', source_url: '' };
+
+export default function AccountDetailPage() {
+  const params = useParams();
+  const accountId = Number(params.id);
   const router = useRouter();
 
   const [tab, setTab] = useState<Tab>('overview');
@@ -58,7 +60,7 @@ export default function AccountDetailPage({ params }: { params: Promise<{ id: st
   const [showContactModal, setShowContactModal] = useState(false);
   const [showSignalModal, setShowSignalModal] = useState(false);
   const [contactForm, setContactForm] = useState({ name: '', role: '', email: '', phone: '' });
-  const [signalForm, setSignalForm] = useState({ signal_type: 'News', title: '', description: '', source_url: '' });
+  const [signalForm, setSignalForm] = useState(DEFAULT_SIGNAL_FORM);
 
   useEffect(() => {
     async function load() {
@@ -100,7 +102,7 @@ export default function AccountDetailPage({ params }: { params: Promise<{ id: st
     if (!signalForm.title.trim()) return;
     const s = await accountsApi.createTriggerSignal(accountId, signalForm);
     setSignals([...signals, s]);
-    setSignalForm({ signal_type: 'News', title: '', description: '', source_url: '' });
+    setSignalForm(DEFAULT_SIGNAL_FORM);
     setShowSignalModal(false);
   }
 
@@ -141,7 +143,7 @@ export default function AccountDetailPage({ params }: { params: Promise<{ id: st
   ];
 
   const pipelineValue = opportunities.reduce((sum, o) => sum + (o.estimated_value || 0), 0);
-  const activeSignals = signals.filter((s) => s.status !== 'Dismissed').length;
+  const activeSignals = signals.filter((s) => s.status !== 'dismissed').length;
 
   return (
     <>
@@ -161,6 +163,7 @@ export default function AccountDetailPage({ params }: { params: Promise<{ id: st
             {/* Avatar */}
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-color-primary/20 to-color-secondary/10 border border-color-primary/20 flex items-center justify-center shrink-0 shadow-neon">
               {account.logo_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img src={account.logo_url} alt="" className="w-12 h-12 rounded-xl object-cover" />
               ) : (
                 <Building2 size={28} className="text-color-primary" />
@@ -601,12 +604,12 @@ export default function AccountDetailPage({ params }: { params: Promise<{ id: st
             <div className="space-y-3">
               <select aria-label="Signal type" value={signalForm.signal_type} onChange={(e) => setSignalForm({ ...signalForm, signal_type: e.target.value })}
                 className="w-full px-3 py-2 rounded-xl bg-color-surface/80 border border-color-border-subtle text-color-text-main text-sm focus:border-color-primary focus:outline-none transition-colors">
-                <option value="News">News</option>
-                <option value="Event">Event</option>
-                <option value="Financial">Financial</option>
-                <option value="Leadership">Leadership Change</option>
-                <option value="Expansion">Expansion</option>
-                <option value="Contract">Contract Award</option>
+                <option value="planning">Planning</option>
+                <option value="grid">Grid</option>
+                <option value="hiring_spike">Hiring Spike</option>
+                <option value="framework_award">Framework Award</option>
+                <option value="new_build">New Build</option>
+                <option value="expansion">Expansion</option>
               </select>
               <input type="text" placeholder="Signal Title *" value={signalForm.title} onChange={(e) => setSignalForm({ ...signalForm, title: e.target.value })}
                 className="w-full px-3 py-2 rounded-xl bg-color-surface/80 border border-color-border-subtle text-color-text-main text-sm focus:border-color-primary focus:outline-none transition-colors" />
