@@ -4,7 +4,6 @@ Parses the structured markdown/text, upserts Accounts, creates Opportunities and
 TriggerSignals, and stores the raw briefing as a DailyBriefing record.
 """
 
-import asyncio
 import logging
 import re
 from datetime import datetime, date
