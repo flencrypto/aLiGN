@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Newspaper, ExternalLink, Clock } from 'lucide-react';
 import WidgetCard from './WidgetCard';
 import { WIDGET_CONFIGS, DC_NEWS_SEED } from '@/lib/widgetConfig';
+import { isSafeUrl } from '@/lib/safeUrl';
 
 const config = WIDGET_CONFIGS.find((w) => w.id === 'dc-company-news')!;
 
@@ -51,7 +52,8 @@ export default function DCNewsWidget() {
       const items = DC_NEWS_SEED as NewsItem[];
       setNews(items.slice(0, config.max_rows));
       setLastUpdated(new Date());
-    } catch {
+    } catch (err) {
+      console.error('Failed to load DC news feed:', err);
       setError('Unable to load DC news feed');
     } finally {
       setLoading(false);
@@ -96,7 +98,7 @@ export default function DCNewsWidget() {
                 <span className="text-xs text-[var(--color-text-faint)]">{item.company}</span>
                 {item.url && (
                   <a
-                    href={item.url}
+                    href={isSafeUrl(item.url) ? item.url : '#'}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1 text-xs text-[var(--color-primary)] hover:underline"

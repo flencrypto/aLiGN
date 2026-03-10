@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { CalendarDays, MapPin, ExternalLink, Clock } from 'lucide-react';
 import WidgetCard from './WidgetCard';
 import { WIDGET_CONFIGS, DC_EVENTS_SEED } from '@/lib/widgetConfig';
+import { isSafeUrl } from '@/lib/safeUrl';
 
 const config = WIDGET_CONFIGS.find((w) => w.id === 'upcoming-sector-events')!;
 
@@ -66,7 +67,8 @@ export default function UpcomingEventsWidget() {
 
       setEvents(upcoming);
       setLastUpdated(new Date());
-    } catch {
+    } catch (err) {
+      console.error('Failed to load sector events:', err);
       setError('Unable to load sector events');
     } finally {
       setLoading(false);
@@ -134,7 +136,7 @@ export default function UpcomingEventsWidget() {
 
                     {event.url && (
                       <a
-                        href={event.url}
+                        href={isSafeUrl(event.url) ? event.url : '#'}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="mt-1.5 inline-flex items-center gap-1 text-xs text-[var(--color-primary)] hover:underline"

@@ -13,7 +13,6 @@ interface Task {
   label: string;
   group: 'urgent' | 'pipeline' | 'bid' | 'estimating';
   done: boolean;
-  link?: string;
 }
 
 export default function TasksTodayWidget() {
@@ -135,7 +134,7 @@ export default function TasksTodayWidget() {
                       >
                         {task.label}
                       </span>
-                      {!task.done && task.link && (
+                      {!task.done && (
                         <ChevronRight size={12} className="text-[var(--color-text-faint)] shrink-0" />
                       )}
                     </button>

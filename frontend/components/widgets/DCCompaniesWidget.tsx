@@ -5,6 +5,7 @@ import { Building2, Globe, MapPin, Sparkles } from 'lucide-react';
 import WidgetCard from './WidgetCard';
 import { accountsApi, type Account } from '@/lib/api';
 import { WIDGET_CONFIGS, DC_COMPANIES_SEED } from '@/lib/widgetConfig';
+import { isSafeUrl } from '@/lib/safeUrl';
 
 const config = WIDGET_CONFIGS.find((w) => w.id === 'newly-formed-dc-companies')!;
 
@@ -57,14 +58,14 @@ export default function DCCompaniesWidget() {
           first_seen: a.created_at ?? new Date().toISOString(),
           notes: a.notes ?? undefined,
         }));
-      } catch {
-        // Fall back to seed data if API fails or returns empty
+      } catch (err) {
+        console.error('DC companies API unavailable, using seed data:', err);
       }
 
       if (rows.length === 0) {
         rows = (DC_COMPANIES_SEED as CompanyRow[]).map((s) => ({
           ...s,
-          id: s.id ?? Math.random().toString(),
+          id: s.id,
         }));
       }
 
@@ -122,7 +123,7 @@ export default function DCCompaniesWidget() {
                 )}
                 {c.website && (
                   <a
-                    href={c.website}
+                    href={isSafeUrl(c.website) ? c.website : '#'}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1 text-xs text-[var(--color-primary)] hover:underline"
