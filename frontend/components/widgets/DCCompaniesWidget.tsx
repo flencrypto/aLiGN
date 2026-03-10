@@ -121,9 +121,9 @@ export default function DCCompaniesWidget() {
                     {c.location}
                   </span>
                 )}
-                {c.website && (
+                {c.website && isSafeUrl(c.website) && (
                   <a
-                    href={isSafeUrl(c.website) ? c.website : '#'}
+                    href={c.website}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1 text-xs text-[var(--color-primary)] hover:underline"

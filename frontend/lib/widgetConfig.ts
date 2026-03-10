@@ -192,7 +192,6 @@ export const DC_EVENTS_SEED = [
     sector: 'data-centre',
     url: 'https://datacenterdynamics.com/events/dcdglobal-london/',
     description: "World's largest data centre conference. Critical for networking with DC developers, operators, and supply chain.",
-    days_until: Math.ceil((new Date('2025-11-19').getTime() - Date.now()) / 86400000),
   },
   {
     id: 'evt-002',
@@ -203,7 +202,6 @@ export const DC_EVENTS_SEED = [
     sector: 'data-centre',
     url: 'https://www.datacloudgroup.com/dce/',
     description: 'Premier European data centre and cloud industry summit. High concentration of C-suite executives.',
-    days_until: Math.ceil((new Date('2025-06-10').getTime() - Date.now()) / 86400000),
   },
   {
     id: 'evt-003',
@@ -214,7 +212,6 @@ export const DC_EVENTS_SEED = [
     sector: 'data-centre',
     url: 'https://www.gartner.com/en/conferences/emea/data-analytics-uk',
     description: 'Enterprise IT strategy summit. Strong representation from data centre buyers and CIOs.',
-    days_until: Math.ceil((new Date('2025-09-22').getTime() - Date.now()) / 86400000),
   },
   {
     id: 'evt-004',
@@ -225,7 +222,6 @@ export const DC_EVENTS_SEED = [
     sector: 'construction',
     url: 'https://www.ukconstructionweek.com',
     description: 'UK\'s largest construction exhibition. Key for MEP subcontractors and data centre fit-out contractors.',
-    days_until: Math.ceil((new Date('2025-10-07').getTime() - Date.now()) / 86400000),
   },
   {
     id: 'evt-005',
@@ -236,7 +232,6 @@ export const DC_EVENTS_SEED = [
     sector: 'data-centre',
     url: 'https://www.datacentreworld.com',
     description: 'Leading technical conference for data centre professionals covering design, build, and operations.',
-    days_until: Math.ceil((new Date('2026-03-04').getTime() - Date.now()) / 86400000),
   },
   {
     id: 'evt-006',
@@ -247,7 +242,6 @@ export const DC_EVENTS_SEED = [
     sector: 'energy',
     url: 'https://energyutilitiessummit.co.uk',
     description: 'Grid connection and renewable energy strategies for large power consumers including data centres.',
-    days_until: Math.ceil((new Date('2025-05-14').getTime() - Date.now()) / 86400000),
   },
 ];
 

@@ -17,8 +17,7 @@ export type WidgetDataSource =
   | 'align-signals'
   | 'align-opportunities'
   | 'align-bids'
-  | 'external-events-feed'
-  | string;
+  | 'external-events-feed';
 
 export interface WidgetVariable {
   name: string;

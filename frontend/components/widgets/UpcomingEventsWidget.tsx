@@ -134,9 +134,9 @@ export default function UpcomingEventsWidget() {
                       {event.description}
                     </p>
 
-                    {event.url && (
+                    {event.url && isSafeUrl(event.url) && (
                       <a
-                        href={isSafeUrl(event.url) ? event.url : '#'}
+                        href={event.url}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="mt-1.5 inline-flex items-center gap-1 text-xs text-[var(--color-primary)] hover:underline"

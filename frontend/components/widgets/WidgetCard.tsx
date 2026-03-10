@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { RefreshCw, AlertCircle } from 'lucide-react';
 import AlignLogo from '@/components/layout/AlignLogo';
 import type { WidgetConfig } from '@/types/widget';
@@ -29,8 +29,11 @@ export default function WidgetCard({
   const handleRefresh = useCallback(async () => {
     if (!onRefresh || refreshing) return;
     setRefreshing(true);
-    await onRefresh();
-    setRefreshing(false);
+    try {
+      await onRefresh();
+    } finally {
+      setRefreshing(false);
+    }
   }, [onRefresh, refreshing]);
 
   const isSpinning = loading || refreshing;

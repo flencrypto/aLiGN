@@ -30,7 +30,7 @@ const STAGE_COLORS: Record<string, string> = {
 };
 
 function formatValue(v: number | null | undefined): string {
-  if (!v) return 'TBC';
+  if (v == null) return 'TBC';
   if (v >= 1_000_000) return `£${(v / 1_000_000).toFixed(1)}M`;
   if (v >= 1_000) return `£${(v / 1_000).toFixed(0)}K`;
   return `£${v}`;

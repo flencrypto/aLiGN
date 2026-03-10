@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Newspaper, ExternalLink, Clock } from 'lucide-react';
+import { ExternalLink, Clock } from 'lucide-react';
 import WidgetCard from './WidgetCard';
 import { WIDGET_CONFIGS, DC_NEWS_SEED } from '@/lib/widgetConfig';
 import { isSafeUrl } from '@/lib/safeUrl';
@@ -96,9 +96,9 @@ export default function DCNewsWidget() {
 
               <div className="flex items-center justify-between">
                 <span className="text-xs text-[var(--color-text-faint)]">{item.company}</span>
-                {item.url && (
+                {item.url && isSafeUrl(item.url) && (
                   <a
-                    href={isSafeUrl(item.url) ? item.url : '#'}
+                    href={item.url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1 text-xs text-[var(--color-primary)] hover:underline"

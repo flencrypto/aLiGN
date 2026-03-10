@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { Calendar, Clock, FileText, Zap, Users } from 'lucide-react';
+import { Clock, FileText, Zap, Users } from 'lucide-react';
 import WidgetCard from './WidgetCard';
 import { opportunitiesApi, bidsApi, signalsApi, type Opportunity, type Bid, type SignalEvent } from '@/lib/api';
 import { WIDGET_CONFIGS } from '@/lib/widgetConfig';

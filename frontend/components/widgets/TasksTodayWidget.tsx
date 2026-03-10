@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { CheckCircle2, Circle, AlertTriangle, ChevronRight } from 'lucide-react';
+import { CheckCircle2, Circle, ChevronRight } from 'lucide-react';
 import WidgetCard from './WidgetCard';
 import { bidsApi, opportunitiesApi, type Bid, type Opportunity } from '@/lib/api';
 import { WIDGET_CONFIGS } from '@/lib/widgetConfig';
