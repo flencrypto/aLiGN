@@ -10,6 +10,7 @@
 
 'use client'
 
+import Image from 'next/image'
 import { useAuth, useUser } from '@clerk/nextjs'
 
 /**
@@ -36,10 +37,12 @@ export function UserProfileCard() {
   return (
     <div className="rounded-lg border p-6">
       <div className="flex items-center gap-4">
-        <img 
-          src={user.imageUrl} 
-          alt={user.fullName || 'User'} 
+        <Image
+          src={user.imageUrl}
+          alt={user.fullName || 'User'}
           className="h-16 w-16 rounded-full"
+          width={64}
+          height={64}
         />
         <div>
           <h2 className="text-xl font-bold">{user.fullName}</h2>
@@ -88,7 +91,7 @@ export function BidActionButtons({ bidId }: { bidId: string }) {
       {/* Only show if user has bid read permission */}
       {has({ permission: 'org:bid:read' }) && (
         <button className="btn btn-secondary">
-          View Bid
+          View Bid {bidId}
         </button>
       )}
 
@@ -249,7 +252,7 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
         <div className="max-w-md text-center">
           <h1 className="mb-4 text-2xl font-bold">Welcome to xALiGN!</h1>
           <p className="mb-6 text-muted-foreground">
-            Let's get you set up with a few quick questions.
+            Let&apos;s get you set up with a few quick questions.
           </p>
           <button className="btn btn-primary">
             Start Onboarding
