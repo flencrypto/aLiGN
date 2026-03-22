@@ -24,6 +24,7 @@ import {
   X,
   Radio,
   LayoutGrid,
+  Bug,
 } from 'lucide-react';
 
 const navGroups = [
@@ -61,6 +62,7 @@ const navGroups = [
       { href: '/blog', label: 'News Feed', Icon: Newspaper },
       { href: '/agents', label: 'Agents', Icon: Bot },
       { href: '/setup', label: 'Setup', Icon: Settings },
+      { href: '/debug', label: 'Debug', Icon: Bug },
     ],
   },
 ];
