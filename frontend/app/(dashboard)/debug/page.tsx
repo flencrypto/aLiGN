@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Header from '@/components/layout/Header';
 import {
   Copy,
@@ -64,13 +64,21 @@ const TABS: { id: TabId; label: string; Icon: typeof Palette }[] = [
 ───────────────────────────────────────────────────────────── */
 function CopyButton({ value }: { value: string }) {
   const [copied, setCopied] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current !== null) clearTimeout(timerRef.current);
+    };
+  }, []);
 
   function handleCopy() {
     if (!navigator?.clipboard) return;
     navigator.clipboard.writeText(value).then(
       () => {
         setCopied(true);
-        setTimeout(() => setCopied(false), 1800);
+        if (timerRef.current !== null) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => setCopied(false), 1800);
       },
       () => { /* permission denied or non-secure context — ignore silently */ }
     );
