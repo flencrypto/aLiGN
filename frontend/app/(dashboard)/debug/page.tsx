@@ -89,10 +89,12 @@ function CopyButton({ value }: { value: string }) {
       onClick={handleCopy}
       title={copied ? 'Copied!' : `Copy ${value}`}
       aria-label={copied ? 'Copied!' : `Copy ${value}`}
-      aria-live="polite"
       className="ml-auto p-1 rounded-md text-color-text-faint hover:text-color-primary hover:bg-color-primary/10 transition-all duration-150"
     >
       {copied ? <Check size={12} className="text-color-success" /> : <Copy size={12} />}
+      <span role="status" aria-live="polite" className="sr-only">
+        {copied ? 'Copied!' : ''}
+      </span>
     </button>
   );
 }
@@ -621,9 +623,7 @@ function EffectsPanel() {
             </div>
           </div>
           <div className="glass-card rounded-xl overflow-hidden">
-            <div className="h-24 bg-grid-palantir bg-[length:40px_40px]"
-              style={{ backgroundImage: 'linear-gradient(rgba(0,229,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(0,229,255,0.06) 1px, transparent 1px)' }}
-            />
+            <div className="h-24 bg-grid-palantir bg-[length:40px_40px]" />
             <div className="p-4">
               <p className="text-xs font-semibold text-color-text-main">Palantir Grid</p>
               <p className="text-[10px] text-color-text-faint mt-0.5">bg-grid-palantir technical grid pattern</p>
