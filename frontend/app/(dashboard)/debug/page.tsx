@@ -29,18 +29,18 @@ type TabId = 'colors' | 'typography' | 'components' | 'animations' | 'effects';
    Data
 ───────────────────────────────────────────────────────────── */
 const COLOR_TOKENS = [
-  { name: '--color-background',    hex: '#0A0F1C', label: 'Background',      twClass: 'bg-color-background' },
-  { name: '--color-surface',       hex: '#161F33', label: 'Surface',         twClass: 'bg-color-surface' },
-  { name: '--color-border-subtle', hex: '#1F2A44', label: 'Border Subtle',   twClass: 'bg-color-border-subtle' },
-  { name: '--color-primary',       hex: '#00E5FF', label: 'Primary (Cyan)',  twClass: 'bg-color-primary' },
-  { name: '--color-primary-dark',  hex: '#00B4D8', label: 'Primary Dark',    twClass: 'bg-color-primary-dark' },
-  { name: '--color-secondary',     hex: '#6366F1', label: 'Secondary',       twClass: 'bg-color-secondary' },
-  { name: '--color-text-main',     hex: '#F1F5F9', label: 'Text Main',       twClass: 'bg-color-text-main' },
-  { name: '--color-text-muted',    hex: '#94A3B8', label: 'Text Muted',      twClass: 'bg-color-text-muted' },
-  { name: '--color-text-faint',    hex: '#64748B', label: 'Text Faint',      twClass: 'bg-color-text-faint' },
-  { name: '--color-success',       hex: '#22C55E', label: 'Success',         twClass: 'bg-color-success' },
-  { name: '--color-warning',       hex: '#F59E0B', label: 'Warning',         twClass: 'bg-color-warning' },
-  { name: '--color-danger',        hex: '#EF4444', label: 'Danger',          twClass: 'bg-color-danger' },
+  { name: '--color-background',    label: 'Background',      twClass: 'bg-color-background' },
+  { name: '--color-surface',       label: 'Surface',         twClass: 'bg-color-surface' },
+  { name: '--color-border-subtle', label: 'Border Subtle',   twClass: 'bg-color-border-subtle' },
+  { name: '--color-primary',       label: 'Primary (Cyan)',  twClass: 'bg-color-primary' },
+  { name: '--color-primary-dark',  label: 'Primary Dark',    twClass: 'bg-color-primary-dark' },
+  { name: '--color-secondary',     label: 'Secondary',       twClass: 'bg-color-secondary' },
+  { name: '--color-text-main',     label: 'Text Main',       twClass: 'bg-color-text-main' },
+  { name: '--color-text-muted',    label: 'Text Muted',      twClass: 'bg-color-text-muted' },
+  { name: '--color-text-faint',    label: 'Text Faint',      twClass: 'bg-color-text-faint' },
+  { name: '--color-success',       label: 'Success',         twClass: 'bg-color-success' },
+  { name: '--color-warning',       label: 'Warning',         twClass: 'bg-color-warning' },
+  { name: '--color-danger',        label: 'Danger',          twClass: 'bg-color-danger' },
 ];
 
 const SHADOW_TOKENS = [
@@ -122,6 +122,7 @@ function TokenRow({ label, value }: { label: string; value: string }) {
 ───────────────────────────────────────────────────────────── */
 function ColorsPanel() {
   const [fontTokens, setFontTokens] = useState({ sans: '…', mono: '…' });
+  const [resolvedColors, setResolvedColors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const computed = getComputedStyle(document.documentElement);
@@ -129,6 +130,11 @@ function ColorsPanel() {
       sans: computed.getPropertyValue('--font-sans').trim() || 'Inter, ui-sans-serif, system-ui',
       mono: computed.getPropertyValue('--font-mono').trim() || 'JetBrains Mono, ui-monospace',
     });
+    const colors: Record<string, string> = {};
+    COLOR_TOKENS.forEach((t) => {
+      colors[t.name] = computed.getPropertyValue(t.name).trim();
+    });
+    setResolvedColors(colors);
   }, []);
   return (
     <div className="space-y-8">
@@ -138,14 +144,13 @@ function ColorsPanel() {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {COLOR_TOKENS.map((token) => (
             <div key={token.name} className="glass-card rounded-xl overflow-hidden group">
-              {/* Swatch */}
-              <div
-                className="h-16 w-full"
-                style={{ backgroundColor: token.hex }}
-              />
+              {/* Swatch uses Tailwind class so it always matches the live theme */}
+              <div className={`h-16 w-full ${token.twClass}`} />
               <div className="p-3">
                 <p className="text-xs font-semibold text-color-text-main truncate">{token.label}</p>
-                <p className="text-[10px] font-mono text-color-text-faint mt-0.5">{token.hex}</p>
+                <p className="text-[10px] font-mono text-color-text-faint mt-0.5">
+                  {resolvedColors[token.name] || '…'}
+                </p>
                 <div className="flex items-center mt-1.5">
                   <p className="text-[9px] font-mono text-color-text-faint/70 truncate flex-1">{token.name}</p>
                   <CopyButton value={token.name} />
@@ -182,7 +187,7 @@ function ColorsPanel() {
         <SectionHeading>CSS Variable Reference</SectionHeading>
         <div className="glass-card rounded-xl divide-y divide-color-border-subtle/30">
           {COLOR_TOKENS.map((t) => (
-            <TokenRow key={t.name} label={t.name} value={t.hex} />
+            <TokenRow key={t.name} label={t.name} value={resolvedColors[t.name] || '…'} />
           ))}
           <TokenRow label="--radius-card"   value="8px" />
           <TokenRow label="--radius-button" value="6px" />
@@ -347,30 +352,32 @@ function ComponentsPanel() {
         <SectionHeading>Form Inputs</SectionHeading>
         <div className="glass-card rounded-xl p-6 space-y-4 max-w-lg">
           <div>
-            <label className="block text-xs font-mono uppercase tracking-wider text-color-text-faint mb-1.5">
+            <label htmlFor="debug-text-input" className="block text-xs font-mono uppercase tracking-wider text-color-text-faint mb-1.5">
               Text Input
             </label>
             <input
+              id="debug-text-input"
               type="text"
               placeholder="Enter value…"
               className="w-full px-3 py-2.5 text-sm bg-color-surface/60 border border-color-border-subtle rounded-card text-color-text-main placeholder-color-text-faint focus:outline-none focus:ring-1 focus:ring-color-primary/50 focus:border-color-primary/40 transition-all duration-200 font-mono"
             />
           </div>
           <div>
-            <label className="block text-xs font-mono uppercase tracking-wider text-color-text-faint mb-1.5">
+            <label htmlFor="debug-select" className="block text-xs font-mono uppercase tracking-wider text-color-text-faint mb-1.5">
               Select
             </label>
-            <select className="w-full px-3 py-2.5 text-sm bg-color-surface/60 border border-color-border-subtle rounded-card text-color-text-main focus:outline-none focus:ring-1 focus:ring-color-primary/50 transition-all duration-200 font-mono">
+            <select id="debug-select" className="w-full px-3 py-2.5 text-sm bg-color-surface/60 border border-color-border-subtle rounded-card text-color-text-main focus:outline-none focus:ring-1 focus:ring-color-primary/50 transition-all duration-200 font-mono">
               <option>Option Alpha</option>
               <option>Option Beta</option>
               <option>Option Gamma</option>
             </select>
           </div>
           <div>
-            <label className="block text-xs font-mono uppercase tracking-wider text-color-text-faint mb-1.5">
+            <label htmlFor="debug-textarea" className="block text-xs font-mono uppercase tracking-wider text-color-text-faint mb-1.5">
               Textarea
             </label>
             <textarea
+              id="debug-textarea"
               rows={3}
               placeholder="Enter description…"
               className="w-full px-3 py-2.5 text-sm bg-color-surface/60 border border-color-border-subtle rounded-card text-color-text-main placeholder-color-text-faint focus:outline-none focus:ring-1 focus:ring-color-primary/50 focus:border-color-primary/40 transition-all duration-200 resize-none font-mono"
